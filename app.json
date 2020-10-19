@@ -1,0 +1,12 @@
+{
+  "name": "CapturaDePrecos",
+  "displayName": "CapturaDePrecos",
+  "expo": {
+    "name": "CapturaDePrecos",
+    "slug": "CapturaDePrecos",
+    "version": "1.0.0",
+    "assetBundlePatterns": [
+      "**/*"
+    ]
+  }
+}
