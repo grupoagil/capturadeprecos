@@ -1,4 +1,4 @@
-import React, { useRef } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import {
     Container,
     Header,
@@ -29,14 +29,25 @@ import { StatusBar } from 'react-native';
 
 import { useNavigation } from '@react-navigation/native';
 
+import api from '../../services/api';
+
+
 import { MaterialIcons, Entypo, MaterialCommunityIcons } from '@expo/vector-icons';
 
 import marketThumb from '../../assets/images/marketThumb.png';
 
 import { Modalize } from 'react-native-modalize';
 
-const Products: React.FC = () => {
+
+const Products: React.FC = ({ route }) => {
     const navigation = useNavigation();
+    const [barcode, setBarcode] = useState('');
+
+    const [productName, setProductName] = useState('');
+    const [productPrice, setProductPrice] = useState('');
+    const [productAmount, setProductAmount] = useState('');
+
+    const scannedBarcode = route.params ? route.params.scannedBarcode : undefined;
 
     const modalizeRef = useRef<Modalize>(null);
 
@@ -53,15 +64,33 @@ const Products: React.FC = () => {
         { key: '2', thumb: marketThumb, name: 'Feijão', brand: 'Carioca' },
     ]
 
+    async function fetchData(barcode) {
+        try {
+            const response = await api.get(`?barcode=${barcode}`);
+            if(barcode) {
+                setProductName(response.data.Status);
+            }
+        } catch (err) {
+            console.log(err);
+        }
+    }
+
+    useEffect(() => {
+        console.log(scannedBarcode);
+        setBarcode(scannedBarcode);
+
+        fetchData(scannedBarcode);
+    }, [scannedBarcode])
+
     return (
         <>
             <StatusBar barStyle='dark-content' backgroundColor='#F5F4F4' />
             <Container>
                 <Header>
-                    <MaterialIcons 
-                        name="chevron-left" 
-                        size={32} 
-                        color="black" 
+                    <MaterialIcons
+                        name="chevron-left"
+                        size={32}
+                        color="black"
                         onPress={() => navigation.goBack()}
                     />
                     <Thumbnail
@@ -115,17 +144,29 @@ const Products: React.FC = () => {
                                 placeholder='Digite ou escaneie o código'
                                 keyboardType='number-pad'
                                 textAlign='center'
+                                value={barcode}
+                                onChangeText={value => setBarcode(value)}
                             />
-                            <MaterialIcons name="camera-alt" size={30} color="#757474" />
+                            <MaterialIcons
+                                name="camera-alt"
+                                size={30}
+                                color="#757474"
+                                onPress={() => { navigation.navigate('Scanner') }}
+                            />
                         </ModalInput>
                     </ModalInputContainer>
                     <ModalInputContainer>
                         <ModalLabel>Nome do produto</ModalLabel>
                         <ModalInput>
                             <ModalTextInput
-
+                                value={productName}
+                                onChangeText={value => setProductName(value)}
                             />
-                            <MaterialIcons name="close" size={30} color="#757474" />
+                            <MaterialIcons 
+                                name="close" 
+                                size={30} 
+                                color="#757474" 
+                            />
                         </ModalInput>
                     </ModalInputContainer>
                     <ModalGroup>
@@ -135,7 +176,8 @@ const Products: React.FC = () => {
                             <ModalLabel>Preço</ModalLabel>
                             <ModalInput>
                                 <ModalTextInput
-
+                                    value={productPrice}
+                                    onChangeText={value => setProductPrice(value)}
                                 />
                             </ModalInput>
                         </ModalInputContainer>
@@ -145,15 +187,20 @@ const Products: React.FC = () => {
                             <ModalLabel>Quantidade</ModalLabel>
                             <ModalInput>
                                 <ModalTextInput
-
+                                    value={productAmount}
+                                    onChangeText={value => setProductAmount(value)}
                                 />
                             </ModalInput>
                         </ModalInputContainer>
                     </ModalGroup>
                     <ModalGroup>
-                        <ModalButton 
+                        <ModalButton
                             isButtonCancel={true}
-                            onPress={() => onClose()}
+                            onPress={() => {
+                                setBarcode('');
+                                setProductName('');
+                                onClose();
+                            }}
                         >
                             <ModalButtonText>Cancelar</ModalButtonText>
                         </ModalButton>

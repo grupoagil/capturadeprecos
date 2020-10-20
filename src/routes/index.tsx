@@ -5,6 +5,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import HomeScreen from '../pages/HomeScreen';
 import EstablishmentSelect from '../pages/EstablishmentSelect';
 import Products from '../pages/Products/';
+import Scanner from '../pages/Scanner';
 
 const Stack = createStackNavigator();
 
@@ -18,6 +19,7 @@ const Routes: React.FC = () => {
         <Stack.Screen name="Home" component={HomeScreen} />
         <Stack.Screen name="EstablishmentSelect" component={EstablishmentSelect} />
         <Stack.Screen name="Products" component={Products} />
+        <Stack.Screen name="Scanner" component={Scanner} />
       </Stack.Navigator>
     </NavigationContainer>
   );
