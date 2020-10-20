@@ -16,11 +16,15 @@ import {
     StatusBar,
 } from 'react-native';
 
+import { useNavigation } from '@react-navigation/native';
+
 import marketThumb from '../../assets/images/marketThumb.png';
 
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 const EstablishmentSelect: React.FC = () => {
+    const navigation = useNavigation();
+
     const data = [
         { key: '1', thumb: marketThumb, name: 'Supermercado 1' },
         { key: '2', thumb: marketThumb, name: 'Supermercado 2' },
@@ -48,13 +52,17 @@ const EstablishmentSelect: React.FC = () => {
                             justifyContent: "center",
                             paddingHorizontal: 20
                         }}
+                        showsVerticalScrollIndicator={false}
                         data={data}
                         horizontal={false}
                         numColumns={2}
                         keyExtractor={(item)=> item.key}
                         renderItem={({ item, index }) => {
                             return(
-                                <Card style={ index % 2 === 0 ? { marginRight: 2.5 } : { marginLeft: 2.5 }} >
+                                <Card 
+                                    onPress={() => navigation.navigate('Products')}
+                                    style={ index % 2 === 0 ? { marginRight: 2.5 } : { marginLeft: 2.5 }} 
+                                >
                                     <Thumbnail source={item.thumb} style={{ resizeMode: 'cover' }} />
                                     <CardTextContainer>
                                         <CardText>{item.name}</CardText>

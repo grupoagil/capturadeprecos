@@ -4,6 +4,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 
 import HomeScreen from '../pages/HomeScreen';
 import EstablishmentSelect from '../pages/EstablishmentSelect';
+import Products from '../pages/Products/';
 
 const Stack = createStackNavigator();
 
@@ -16,6 +17,7 @@ const Routes: React.FC = () => {
       >
         <Stack.Screen name="Home" component={HomeScreen} />
         <Stack.Screen name="EstablishmentSelect" component={EstablishmentSelect} />
+        <Stack.Screen name="Products" component={Products} />
       </Stack.Navigator>
     </NavigationContainer>
   );
