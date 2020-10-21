@@ -27,7 +27,7 @@ import {
 
 import { StatusBar } from 'react-native';
 
-import { useNavigation } from '@react-navigation/native';
+import Loading from '../../components/Loading';
 
 import api from '../../services/api';
 
@@ -39,16 +39,8 @@ import marketThumb from '../../assets/images/marketThumb.png';
 import { Modalize } from 'react-native-modalize';
 
 
-const Products: React.FC = ({ route }) => {
-    const navigation = useNavigation();
-    const [barcode, setBarcode] = useState('');
-
-    const [productName, setProductName] = useState('');
-    const [productPrice, setProductPrice] = useState('');
-    const [productAmount, setProductAmount] = useState('');
-
-    const scannedBarcode = route.params ? route.params.scannedBarcode : undefined;
-
+const Products: React.FC = ({ route, navigation }) => {
+    // Modalize Ref e Funções
     const modalizeRef = useRef<Modalize>(null);
 
     const onOpen = () => {
@@ -59,32 +51,69 @@ const Products: React.FC = ({ route }) => {
         modalizeRef.current?.close();
     };
 
+
+    // Código escaneado
+    const scannedBarcode = route.params ? route.params.scannedBarcode : undefined;
+
+    // Estados dos inputs
+    const [barcode, setBarcode] = useState('');
+    const [productName, setProductName] = useState('');
+    const [productPrice, setProductPrice] = useState('');
+    const [productAmount, setProductAmount] = useState('');
+
+    // Estados de atividade
+    const [isLoading, setIsLoading] = useState(false);
+
+
+    // Array de Produtos Catalogados
     const data = [
         { key: '1', thumb: marketThumb, name: 'Arroz', brand: 'Tio João' },
         { key: '2', thumb: marketThumb, name: 'Feijão', brand: 'Carioca' },
     ]
+    
+    // Função de buscar produtos catalogados
+    function getData() {
 
+    }
+
+    // Função de pesquisa do produto por código de barras
     async function fetchData(barcode) {
+        setIsLoading(true)
         try {
             const response = await api.get(`?barcode=${barcode}`);
             if(barcode) {
                 setProductName(response.data.Status);
+            } else {
+                setProductName('');
             }
+            setIsLoading(false);
         } catch (err) {
             console.log(err);
+            setProductName('Produto não encontrado.');
+            setIsLoading(false);
         }
     }
 
-    useEffect(() => {
-        console.log(scannedBarcode);
-        setBarcode(scannedBarcode);
+    // Função de enviar produto ao banco de dados;
+    function handleSubmit() {
 
-        fetchData(scannedBarcode);
-    }, [scannedBarcode])
+    }
+
+
+    useEffect(() => {
+        getData();
+
+        if (scannedBarcode !== undefined) {
+            setBarcode(scannedBarcode);
+            fetchData(scannedBarcode);
+        }
+    }, [scannedBarcode, data])
 
     return (
         <>
             <StatusBar barStyle='dark-content' backgroundColor='#F5F4F4' />
+
+            {/* Listagem de produtos */}
             <Container>
                 <Header>
                     <MaterialIcons
@@ -124,11 +153,16 @@ const Products: React.FC = ({ route }) => {
 
                 />
             </Container>
+
+            {/* Botão Flutuante */}
+
             <Fab
                 onPress={() => { onOpen() }}
             >
                 <Entypo name="plus" size={25} color="white" />
             </Fab>
+
+            {/* Modal adicionar produto */}
 
             <Modalize
                 ref={modalizeRef}
@@ -136,6 +170,12 @@ const Products: React.FC = ({ route }) => {
                 avoidKeyboardLikeIOS={true}
             >
                 <ModalContainer>
+                    {
+                        isLoading === true ?
+                            <Loading />
+                        :
+                        undefined
+                    }
                     <ModalTitle>Adicionar produto</ModalTitle>
                     <ModalInputContainer>
                         <ModalInput>
@@ -144,6 +184,12 @@ const Products: React.FC = ({ route }) => {
                                 placeholder='Digite ou escaneie o código'
                                 keyboardType='number-pad'
                                 textAlign='center'
+                                maxLength={13}
+                                onEndEditing={() => {
+                                    if (barcode !== '') {
+                                        fetchData(barcode)
+                                    }
+                                }}
                                 value={barcode}
                                 onChangeText={value => setBarcode(value)}
                             />
@@ -159,13 +205,9 @@ const Products: React.FC = ({ route }) => {
                         <ModalLabel>Nome do produto</ModalLabel>
                         <ModalInput>
                             <ModalTextInput
+                                autoCapitalize='characters'
                                 value={productName}
                                 onChangeText={value => setProductName(value)}
-                            />
-                            <MaterialIcons 
-                                name="close" 
-                                size={30} 
-                                color="#757474" 
                             />
                         </ModalInput>
                     </ModalInputContainer>
@@ -176,6 +218,7 @@ const Products: React.FC = ({ route }) => {
                             <ModalLabel>Preço</ModalLabel>
                             <ModalInput>
                                 <ModalTextInput
+                                    keyboardType='number-pad'
                                     value={productPrice}
                                     onChangeText={value => setProductPrice(value)}
                                 />
@@ -187,6 +230,7 @@ const Products: React.FC = ({ route }) => {
                             <ModalLabel>Quantidade</ModalLabel>
                             <ModalInput>
                                 <ModalTextInput
+                                    keyboardType='number-pad'
                                     value={productAmount}
                                     onChangeText={value => setProductAmount(value)}
                                 />
