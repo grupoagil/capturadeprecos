@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 import {
     Container,
     Header,
@@ -18,31 +18,67 @@ import {
 
 import { useNavigation } from '@react-navigation/native';
 
-import marketThumb from '../../assets/images/marketThumb.png';
-
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+
+import { AuthContext } from '../../contexts/auth';
+
+import api from '../../services/api';
+
+import AsyncStorage from '@react-native-community/async-storage';
 
 const EstablishmentSelect: React.FC = () => {
     const navigation = useNavigation();
 
-    const data = [
-        { key: '1', thumb: marketThumb, name: 'Supermercado 1' },
-        { key: '2', thumb: marketThumb, name: 'Supermercado 2' },
-        { key: '3', thumb: marketThumb, name: 'Supermercado 3' },
-        { key: '4', thumb: marketThumb, name: 'Supermercado 4' },
-        { key: '5', thumb: marketThumb, name: 'Supermercado 5' },
-        { key: '6', thumb: marketThumb, name: 'Supermercado 6' },
-        { key: '7', thumb: marketThumb, name: 'Supermercado 7' },
-        { key: '8', thumb: marketThumb, name: 'Supermercado 8' },
-    ]
+    const [fetchedData, setFetchedData] = useState([]);
+
+    const { signOut, user } = useContext(AuthContext);
+
+    // const dados = [
+    //     { key: '1', thumb: marketThumb, name: 'Supermercado 1' },
+    //     { key: '2', thumb: marketThumb, name: 'Supermercado 2' },
+    //     { key: '3', thumb: marketThumb, name: 'Supermercado 3' },
+    //     { key: '4', thumb: marketThumb, name: 'Supermercado 4' },
+    //     { key: '5', thumb: marketThumb, name: 'Supermercado 5' },
+    //     { key: '6', thumb: marketThumb, name: 'Supermercado 6' },
+    //     { key: '7', thumb: marketThumb, name: 'Supermercado 7' },
+    //     { key: '8', thumb: marketThumb, name: 'Supermercado 8' },
+    // ]
+
+    async function fetchData() {
+        try {
+            const token = await AsyncStorage.getItem('@Formosa:token');
+
+            const response = await api.get(
+                `https://formosa.agildesenvolvimento.com/api/captura/lista`, {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                }
+            );
+
+            setFetchedData(response.data[0].para_catalogar);
+
+        } catch(err) {
+            console.log(err);
+        }
+    }
+
+    useEffect(() => {
+        fetchData();
+    }, [])
 
     return(
         <>
             <StatusBar barStyle='light-content' backgroundColor='#DE5F5F' />
             <Container>
                 <Header>
-                    <MaterialCommunityIcons name="logout" size={31} color='#FFFFFF' />
-                    <HeaderText>Olá, usuário!</HeaderText>
+                    <MaterialCommunityIcons 
+                        name="logout" 
+                        size={31} 
+                        color='#FFFFFF' 
+                        onPress={signOut}
+                    />
+                    <HeaderText>Olá, {user.data.name}!</HeaderText>
                 </Header>
                 <Content>
                     <Title>Selecione o estabelecimento</Title>
@@ -53,19 +89,19 @@ const EstablishmentSelect: React.FC = () => {
                             paddingHorizontal: 20
                         }}
                         showsVerticalScrollIndicator={false}
-                        data={data}
                         horizontal={false}
                         numColumns={2}
-                        keyExtractor={(item)=> item.key}
+                        data={fetchedData}
+                        keyExtractor={(item)=> String(item.id)}
                         renderItem={({ item, index }) => {
                             return(
                                 <Card 
                                     onPress={() => navigation.navigate('Products')}
-                                    style={ index % 2 === 0 ? { marginRight: 2.5 } : { marginLeft: 2.5 }} 
+                                    style={ index % 2 === 0 ? { marginRight: 2.5 } : { marginLeft: 2.5 } } 
                                 >
-                                    <Thumbnail source={item.thumb} style={{ resizeMode: 'cover' }} />
+                                    <Thumbnail source={{ uri: item.empresa.EMP_LOGO }} style={{ resizeMode: 'cover' }} />
                                     <CardTextContainer>
-                                        <CardText>{item.name}</CardText>
+                                        <CardText>{item.empresa.EMP_NOME.trim()}</CardText>
                                     </CardTextContainer>
                                 </Card>
                             );

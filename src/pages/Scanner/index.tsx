@@ -1,15 +1,14 @@
 import React, { useState, useEffect } from 'react';
-import { Text, View, StyleSheet, Button } from 'react-native';
+import { Text, View, StyleSheet} from 'react-native';
 import { BarCodeScanner } from 'expo-barcode-scanner';
 
 import { useNavigation } from '@react-navigation/native';
-
-import AsyncStorage from '@react-native-community/async-storage';
 
 export default function Scanner() {
     const navigation = useNavigation();
 
     const [data, setData] = useState();
+    
     const [hasPermission, setHasPermission] = useState(null);
     const [scanned, setScanned] = useState(false);
 

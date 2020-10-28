@@ -80,7 +80,7 @@ const Products: React.FC = ({ route, navigation }) => {
     async function fetchData(barcode) {
         setIsLoading(true)
         try {
-            const response = await api.get(`?barcode=${barcode}`);
+            const response = await api.get(`https://barcode-product.herokuapp.com/?barcode=${barcode}`);
             if(barcode) {
                 setProductName(response.data.Status);
             } else {

@@ -60,9 +60,11 @@ export const CardTextContainer = styled.View`
     flex: 1;
     align-items: center;
     justify-content: center;
+    padding: 10px;
 `;
 
 export const CardText = styled.Text`
     font-family: 'Poppins-Medium';
-    font-size: 14px
+    font-size: 14px;
+    text-align: center;
 `;
