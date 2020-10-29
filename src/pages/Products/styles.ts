@@ -32,18 +32,13 @@ export const Thumbnail = styled.Image`
 export const HeaderTitleContainer = styled.View`
     flex: 1;
     margin-left: 15px;  
-    justify-content: center;
+    align-items: flex-end
 `;
 
-export const Supermarket = styled.Text`
-    font-size: 18px;
-    font-family: 'Poppins-SemiBold';
-    color: #565651;
-`;
 
 export const SupermarketName = styled.Text`
-    font-size: 36px;
-    line-height: 40px;
+    font-size: 25px;
+    line-height: 26px;
     font-family: 'Poppins-Bold';
     color: #565651;
 `;
@@ -64,7 +59,7 @@ export const Content = styled.FlatList`
     background-color: #FFFFFF
 `;
 
-export const Item = styled.View`
+export const Item = styled(Pressable)`
     width: 100%;
     height: 100px;
     margin-top: 5px;
@@ -81,33 +76,20 @@ export const ItemThumbnail = styled.Image`
 
 export const ItemContent = styled.View`
     justify-content: center;
-    margin-left: 13px
+    margin-left: 13px;
 `;
 
 export const ItemName = styled.Text`
     font-family: 'Poppins-Bold';
     font-size: 20px;
+    max-width: 85%
 `;
 
 
 export const ItemBrand = styled.Text`
-    font-family: 'Poppins-Light';
+    font-family: 'Poppins-SemiBold';
     font-size: 15px;
 `
-
-export const Fab = styled(Pressable)`
-    width: 70px;
-    height: 70px;
-    border-radius: 35px;
-    background-color: #DE5F5F;
-
-    position: absolute;
-    right: 20px;
-    bottom: 20px;
-
-    align-items: center;
-    justify-content: center;
-`;
 
 export const ModalContainer = styled.View`
     flex: 1;

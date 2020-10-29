@@ -16,11 +16,13 @@ interface AuthContextData {
     user: object;
     signIn(credentials: SignInCredentials): Promise<boolean>;
     signOut(): void;
+    isLoading: boolean;
 }
 
 export const AuthContext = createContext<AuthContextData>({} as AuthContextData);
 
 export const AuthProvider: React.FC = ({ children }) => {
+    const [isLoading, setIsLoading] = useState(true);
     const [data, setData] = useState<AuthState>({} as AuthState);
 
     useEffect(() => {
@@ -30,22 +32,24 @@ export const AuthProvider: React.FC = ({ children }) => {
 
             if (token && user) {
                 setData({ token, user: JSON.parse(user) })
+                setIsLoading(false);
+            } else {
+                setIsLoading(false);
             }
         }
-
         loadStoragedData();
     }, []);
 
     async function signIn({ _email, password }: SignInCredentials) {
         try {
-            const login = await api.post(`https://formosa.agildesenvolvimento.com/api/auth/login`, {
+            const login = await api.post(`/auth/login`, {
                 email: _email,
                 password
             })
 
             const { access_token } = login.data;
             
-            const user = await api.get(`https://formosa.agildesenvolvimento.com/api/auth/me`, {
+            const user = await api.get(`/auth/me`, {
                 headers: {
                     Authorization: `Bearer ${access_token}`
                 }
@@ -54,13 +58,16 @@ export const AuthProvider: React.FC = ({ children }) => {
             const { name, email } = user.data;
 
             await AsyncStorage.setItem('@Formosa:token', access_token);
-            await AsyncStorage.setItem('@Formosa:user', JSON.stringify(user));
+            await AsyncStorage.setItem('@Formosa:user', JSON.stringify({
+                name,
+                email
+            }));
 
             setData({
                 token: access_token,
                 user: {
                     name,
-                    email: email
+                    email
                 }
             });
 
@@ -79,7 +86,7 @@ export const AuthProvider: React.FC = ({ children }) => {
     }
 
     return(
-        <AuthContext.Provider value={{user: data.user, signIn, signOut}}>
+        <AuthContext.Provider value={{ user: data.user, signIn, signOut, isLoading }}>
             {children}
         </AuthContext.Provider>
     );

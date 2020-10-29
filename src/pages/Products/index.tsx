@@ -4,7 +4,6 @@ import {
     Header,
     Thumbnail,
     HeaderTitleContainer,
-    Supermarket,
     SupermarketName,
     Title,
     Content,
@@ -13,7 +12,6 @@ import {
     ItemContent,
     ItemName,
     ItemBrand,
-    Fab,
     ModalContainer,
     ModalTitle,
     ModalGroup,
@@ -25,19 +23,19 @@ import {
     ModalButtonText,
 } from './styles';
 
-import { StatusBar } from 'react-native';
+import { Alert, StatusBar } from 'react-native';
 
 import Loading from '../../components/Loading';
 
 import api from '../../services/api';
 
+import AsyncStorage from '@react-native-community/async-storage';
 
-import { MaterialIcons, Entypo, MaterialCommunityIcons } from '@expo/vector-icons';
+import { MaterialIcons, MaterialCommunityIcons } from '@expo/vector-icons';
 
 import marketThumb from '../../assets/images/marketThumb.png';
 
 import { Modalize } from 'react-native-modalize';
-
 
 const Products: React.FC = ({ route, navigation }) => {
     // Modalize Ref e Funções
@@ -53,7 +51,6 @@ const Products: React.FC = ({ route, navigation }) => {
 
 
     // Código escaneado
-    const scannedBarcode = route.params ? route.params.scannedBarcode : undefined;
 
     // Estados dos inputs
     const [barcode, setBarcode] = useState('');
@@ -66,48 +63,59 @@ const Products: React.FC = ({ route, navigation }) => {
 
 
     // Array de Produtos Catalogados
-    const data = [
-        { key: '1', thumb: marketThumb, name: 'Arroz', brand: 'Tio João' },
-        { key: '2', thumb: marketThumb, name: 'Feijão', brand: 'Carioca' },
-    ]
-    
-    // Função de buscar produtos catalogados
-    function getData() {
+    const [data, setData] = useState([]);
 
-    }
-
-    // Função de pesquisa do produto por código de barras
-    async function fetchData(barcode) {
+    // Função de buscar produtos para catalogar
+    async function getData() {
         setIsLoading(true)
         try {
-            const response = await api.get(`https://barcode-product.herokuapp.com/?barcode=${barcode}`);
-            if(barcode) {
-                setProductName(response.data.Status);
-            } else {
-                setProductName('');
-            }
+            const token = await AsyncStorage.getItem('@Formosa:token');
+
+            const response = await api.get(`/captura/empresas/${route.params.EMP_ID}/produtos`, {
+                headers: {
+                    Authorization: `Bearer ${token}`
+                }
+            });
+
+            setData(response.data);
             setIsLoading(false);
         } catch (err) {
             console.log(err);
-            setProductName('Produto não encontrado.');
             setIsLoading(false);
         }
+        setIsLoading(false);
     }
 
-    // Função de enviar produto ao banco de dados;
-    function handleSubmit() {
+    // Função de enviar produto ao banco de dados = catalogar produto;
+    async function handleSubmit() {
+        if (!productPrice || !barcode || !productName) {
+            Alert.alert('Todos os campos devem ser preenchidos.')
+        } else {
+            try {
+                const token = await AsyncStorage.getItem('@Formosa:token');
+                const response = await api.post(`/captura/registrar`, {
+                    EAN: barcode,
+                    CAT_PRECO: productPrice,
+                    EMP_ID: route.params.EMP_ID
+                }, {
+                    headers: {
+                        Authorization: `Bearer ${token}`
+                    }
+                })
 
+                console.log(response.data);
+                getData();
+            } catch (err) {
+                console.log(err)
+            }
+            onClose();
+        }
     }
 
 
     useEffect(() => {
         getData();
-
-        if (scannedBarcode !== undefined) {
-            setBarcode(scannedBarcode);
-            fetchData(scannedBarcode);
-        }
-    }, [scannedBarcode, data])
+    }, [data])
 
     return (
         <>
@@ -123,44 +131,58 @@ const Products: React.FC = ({ route, navigation }) => {
                         onPress={() => navigation.goBack()}
                     />
                     <Thumbnail
-                        source={marketThumb}
+                        source={{ uri: route.params.EMP_THUMB }}
                         style={{ resizeMode: 'cover' }}
                     />
                     <HeaderTitleContainer>
-                        <Supermarket>Supermercado</Supermarket>
-                        <SupermarketName>Formosa</SupermarketName>
+                        <SupermarketName>{route.params.EMP_NAME}</SupermarketName>
                     </HeaderTitleContainer>
                 </Header>
-                <Title>Produtos catalogados hoje</Title>
-                <Content
-                    showsVerticalScrollIndicator={false}
-                    data={data}
-                    keyExtractor={(item) => item.key}
-                    renderItem={({ item }) => {
-                        return (
-                            <Item>
-                                <ItemThumbnail
-                                    source={item.thumb}
-                                    style={{ resizeMode: 'cover' }}
-                                />
-                                <ItemContent>
-                                    <ItemName>{item.name}</ItemName>
-                                    <ItemBrand>{item.brand}</ItemBrand>
-                                </ItemContent>
-                            </Item>
-                        );
-                    }}
+                <Title>Produtos para catalogar hoje</Title>
+                {
+                    isLoading === true ?
+                        <Loading />
+                        :
+                        <Content
+                            showsVerticalScrollIndicator={false}
+                            ListEmptyComponent={() => {
+                                return (
+                                    <Title>
+                                        Sem produtos aqui.
+                                    </Title>
+                                );
+                            }}
+                            data={data}
+                            keyExtractor={(item) => String(item.produto.id)}
+                            renderItem={({ item }) => {
+                                return (
+                                    <Item
+                                        onPress={() => {
+                                            onOpen();
+                                            setProductName(item.produto.PROD_NOME);
+                                            setBarcode(`${item.produto.PROD_EAN}`);
+                                            setProductPrice('');
+                                        }}
+                                    >
+                                        <ItemThumbnail
+                                            source={item.produto.PROD_LOGO ? { uri: item.produto.PROD_LOGO } : marketThumb}
+                                            style={{ resizeMode: 'cover' }}
+                                        />
+                                        <ItemContent>
+                                            <ItemName
+                                                numberOfLines={2}
+                                                ellipsizeMode="tail"
+                                            >{item.produto.PROD_NOME}</ItemName>
+                                            <ItemBrand>{item.produto.PROD_EAN}</ItemBrand>
+                                        </ItemContent>
+                                    </Item>
+                                );
+                            }}
 
-                />
+                        />
+
+                }
             </Container>
-
-            {/* Botão Flutuante */}
-
-            <Fab
-                onPress={() => { onOpen() }}
-            >
-                <Entypo name="plus" size={25} color="white" />
-            </Fab>
 
             {/* Modal adicionar produto */}
 
@@ -170,34 +192,14 @@ const Products: React.FC = ({ route, navigation }) => {
                 avoidKeyboardLikeIOS={true}
             >
                 <ModalContainer>
-                    {
-                        isLoading === true ?
-                            <Loading />
-                        :
-                        undefined
-                    }
                     <ModalTitle>Adicionar produto</ModalTitle>
                     <ModalInputContainer>
                         <ModalInput>
                             <MaterialCommunityIcons name="barcode-scan" size={30} color="#757474" />
                             <ModalTextInput
-                                placeholder='Digite ou escaneie o código'
-                                keyboardType='number-pad'
                                 textAlign='center'
-                                maxLength={13}
-                                onEndEditing={() => {
-                                    if (barcode !== '') {
-                                        fetchData(barcode)
-                                    }
-                                }}
                                 value={barcode}
                                 onChangeText={value => setBarcode(value)}
-                            />
-                            <MaterialIcons
-                                name="camera-alt"
-                                size={30}
-                                color="#757474"
-                                onPress={() => { navigation.navigate('Scanner') }}
                             />
                         </ModalInput>
                     </ModalInputContainer>
@@ -248,7 +250,9 @@ const Products: React.FC = ({ route, navigation }) => {
                         >
                             <ModalButtonText>Cancelar</ModalButtonText>
                         </ModalButton>
-                        <ModalButton>
+                        <ModalButton
+                            onPress={handleSubmit}
+                        >
                             <ModalButtonText>Adicionar</ModalButtonText>
                         </ModalButton>
                     </ModalGroup>

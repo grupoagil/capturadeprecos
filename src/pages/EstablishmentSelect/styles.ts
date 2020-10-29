@@ -53,6 +53,8 @@ export const Card = styled(Pressable)`
 export const Thumbnail = styled.Image`
     width: 100%;
     height: 140px;
+    border-top-left-radius: 15px;
+    border-top-right-radius: 15px
 `;
 
 

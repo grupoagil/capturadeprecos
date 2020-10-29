@@ -9,6 +9,7 @@ export const Container = styled.View`
     border-radius: 10px;
     elevation: 5;
     position: absolute;
-    left: 50%;
-    bottom: 50%;
+    left: 45%;
+    bottom: 45%;
+    flex: 1;
 `;

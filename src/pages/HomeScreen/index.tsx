@@ -19,9 +19,10 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import { AuthContext } from '../../contexts/auth';
 
-const HomeScreen: React.FC = () => {
-    const navigation = useNavigation();
+import Loading from '../../components/Loading';
 
+const HomeScreen: React.FC = () => {
+    const [isLoading, setIsLoading] = useState(false);
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
 
@@ -31,6 +32,7 @@ const HomeScreen: React.FC = () => {
         if (!email || !password) {
             Alert.alert('Todos os campos devem ser preenchidos!')
         } else {
+            setIsLoading(true);
             try {
                 const response = await signIn({ _email: email, password });
                 if (response === true) {
@@ -38,14 +40,14 @@ const HomeScreen: React.FC = () => {
                 } else {
                     Alert.alert('Algum erro ocorreu. Tente novamente.');
                 }
-                
+                setIsLoading(false);
             } catch(err) {
                 console.log(err)
+                setIsLoading(false);
             }
         }
     
     }
-
     return(
         <>
             <StatusBar barStyle='light-content' backgroundColor='#DE5F5F' />
@@ -60,6 +62,12 @@ const HomeScreen: React.FC = () => {
                     <Container>
                         <Title>Captura de Preços</Title>
                         <Form>
+                            {
+                                isLoading === true ?
+                                <Loading />
+                                : 
+                                undefined
+                            }
                             <Input>
                                 <Icon name="email" size={24} color="#DE5F5F" />
                                 <TextInput 
