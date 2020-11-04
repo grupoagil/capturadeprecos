@@ -1,21 +1,34 @@
-import { StatusBar } from 'expo-status-bar';
+import 'react-native-gesture-handler';
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { 
+  Poppins_400Regular, 
+  Poppins_600SemiBold, 
+  Poppins_700Bold,
+  Poppins_500Medium,
+} from '@expo-google-fonts/poppins'
+import { useFonts } from 'expo-font'
 
-export default function App() {
+import Routes from './src/routes';
+
+import { AuthProvider } from './src/contexts/auth';
+
+const App: React.FC = () => {
+  const [fontsLoaded] = useFonts({
+    Poppins_400Regular,
+    Poppins_600SemiBold,
+    Poppins_700Bold,
+    Poppins_500Medium,
+  })
+
+  if (!fontsLoaded) {
+    return null;
+  }
+
   return (
-    <View style={styles.container}>
-      <Text>Open up App.tsx to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
+    <AuthProvider>
+      <Routes />
+    </AuthProvider>
   );
 }
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
+export default App;
