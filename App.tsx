@@ -11,6 +11,7 @@ import { useFonts } from 'expo-font'
 import Routes from './src/routes';
 
 import { AuthProvider } from './src/contexts/auth';
+import axios from 'axios';
 
 const App: React.FC = () => {
   const [fontsLoaded] = useFonts({

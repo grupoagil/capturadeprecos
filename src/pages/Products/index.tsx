@@ -1,4 +1,21 @@
-import React, { useRef, useState, useEffect, useContext } from 'react';
+import React, { useRef, useState, useEffect, useCallback } from 'react';
+import { Alert, StatusBar, View, StyleSheet, Modal, Button } from 'react-native';
+
+import Loading from '../../components/Loading';
+
+import api from '../../services/api';
+
+import AsyncStorage from '@react-native-community/async-storage';
+
+import { MaterialIcons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
+
+import marketThumb from '../../assets/images/marketThumb.png';
+
+import { Modalize } from 'react-native-modalize';
+
+import mask from '../../utils/mask'
+import Scanner from '../../components/Scanner'
+
 import {
 	Container,
 	Header,
@@ -22,24 +39,9 @@ import {
 	ModalButton,
 	ModalButtonText,
 	FilterButton,
+	CardContainer,
 } from './styles';
 
-import { Alert, Button, StatusBar, Text } from 'react-native';
-import { RectButton } from 'react-native-gesture-handler';
-
-import Loading from '../../components/Loading';
-
-import api from '../../services/api';
-
-import AsyncStorage from '@react-native-community/async-storage';
-
-import { MaterialIcons, MaterialCommunityIcons, Entypo, Feather } from '@expo/vector-icons';
-
-import marketThumb from '../../assets/images/marketThumb.png';
-
-import { Modalize } from 'react-native-modalize';
-
-import { AuthContext } from '../../contexts/auth';
 
 const Products: React.FC = ({ route, navigation }) => {
 	// Modalize Ref e Funções
@@ -65,35 +67,38 @@ const Products: React.FC = ({ route, navigation }) => {
 
 
 	// Array de Produtos Catalogados
-	const [data, setData] = useState([]);
+	const [products, setProducts] = useState([]);
 
+	// modal filter
+	const [modalVisible, setModalVisible] = React.useState(false);
+	const [type, setType] = React.useState("");
+  const [data, setData] = React.useState("");
+
+	
 	// Código escaneado
-	const scannedBarcode = route.params ? route.params.scannedBarcode : undefined;
 	
-	
- 
 	// Pesquisar do produto por código de barras
-	async function fetchData(barcode) {
-		setIsLoading(true)
-		try {
-				const response = await api.get(`https://barcode-product.herokuapp.com/?barcode=${barcode}`);
-				if(barcode) {
-						setProductName(response.data);
-				} else {
-						setProductName('');
+	const onCodeScanned = useCallback(async (type, data) => {
+			setIsLoading(true)
+			setType(type);
+			setData(data);
+			setModalVisible(false);
+			
+			const token = await AsyncStorage.getItem('@Formosa:token');
+			const response = await api.get(`/captura/empresas/${route.params.EMP_ID}/produtos`, {
+				headers: {
+					Authorization: `Bearer ${token}`
 				}
-				setIsLoading(false);
-		} catch (err) {
-				console.log(err);
-				setProductName('Produto não encontrado.');
-				setIsLoading(false);
-		}
-	}
+			})
+
+			alert(`Código de barras escaneado com sucesso!${"\n"}${data}`)
+			setIsLoading(false)
+	}, [data])
+	
 
 	// Função de buscar produtos para catalogar
 	async function getData() {
-
-			setIsLoading(true)
+		setIsLoading(true)
 			try {
 					const token = await AsyncStorage.getItem('@Formosa:token');
 
@@ -102,7 +107,9 @@ const Products: React.FC = ({ route, navigation }) => {
 									Authorization: `Bearer ${token}`
 							}
 					});
-					setData(response.data);
+					
+					
+					setProducts(response.data);
 					setIsLoading(false);
 			} catch (err) {
 					console.log(err);
@@ -140,15 +147,7 @@ const Products: React.FC = ({ route, navigation }) => {
 
 	useEffect(() => {
 		getData();
-
-			if (scannedBarcode !== undefined) {
-					setBarcode(scannedBarcode);
-					fetchData(scannedBarcode);
-			}
-
-	}, [scannedBarcode])
-
-	
+	}, [])	
 	return (
 			<>
 				<StatusBar barStyle='dark-content' backgroundColor='#F5F4F4' />
@@ -175,53 +174,67 @@ const Products: React.FC = ({ route, navigation }) => {
 							isLoading === true ?
 								<Loading />
 								:
-								<Content
-
+								<CardContainer
 									showsVerticalScrollIndicator={false}
-									ListEmptyComponent={() => {
-										return (
-												<Title>
-														Sem produtos aqui.
-												</Title>
-										);
-										}}
-										data={data}
-										keyExtractor={(item) => String(item.produto.id)}
-										renderItem={({ item }) => {
-												return (
-													<Item
-															onPress={() => {
-																	onOpen();
-																	setProductName(item.produto.PROD_NOME);
-																	setBarcode(`${item.produto.PROD_EAN}`);
-																	setProductPrice('');
-															}}
-													>
-														<ItemThumbnail
-																source={item.produto.PROD_LOGO ? { uri: item.produto.PROD_LOGO } : marketThumb}
-																style={{ resizeMode: 'cover' }}
-														/>
-														<ItemContent>
-															<ItemName
-																numberOfLines={2}
-																ellipsizeMode="tail"
-																>
-																	{item.produto.PROD_NOME}</ItemName>
-																<ItemBrand>{item.produto.PROD_EAN}</ItemBrand>
-														</ItemContent>
-												</Item>
-												);
-										}}/>
-								}
-						
+									contentContainerStyle={{
+										paddingHorizontal: 16,
+										paddingBottom: 16,
+										maxWidth: "100%"}}
+								>
 
-						<FilterButton onPress={() => 
-							{navigation.navigate('Scanner')}
-							}>
-							<Feather name="filter" size={24} color="#333" />
-						</FilterButton>
-				</Container>
-				
+								{products.map((item, index) => {
+									return (
+										<Content 
+										key={index}
+										>
+											<Item 
+												onPress={() => {
+												onOpen();
+												setProductName(item.produto.PROD_NOME);
+												setBarcode(`${item.produto.PROD_EAN}`);
+												setProductPrice('');
+												}}
+											>
+									
+											<ItemThumbnail
+												source={item.produto.PROD_LOGO ? { uri: item.produto.PROD_LOGO } : marketThumb}
+												style={{ resizeMode: 'cover' }}
+											/>
+
+											<ItemContent>
+												<ItemName
+													numberOfLines={2}
+													ellipsizeMode="tail"
+													>
+														{item.produto.PROD_NOME}</ItemName>
+													<ItemBrand>{item.produto.PROD_EAN}</ItemBrand>
+											</ItemContent>
+
+											</Item>
+										</Content>
+									)
+								})}
+								</CardContainer>
+								}
+					</Container>
+
+					{/* modal filter */}
+					<FilterButton onPress={() => setModalVisible(true)}>
+							<Feather name="camera" size={24} color="#fff" />
+					</FilterButton>
+
+					<Modal
+						visible={modalVisible}
+						transparent={true}
+						animationType="fade"
+						onRequestClose={() => setModalVisible(false)}
+					>
+						<View style={styles.modal}>
+							<Scanner onCodeScanned={onCodeScanned} />
+							<Button title="Cancelar" onPress={() => setModalVisible(false)} />
+						</View>
+					</Modal>
+
 				{/* Modal adicionar produto */}
 
 				<Modalize
@@ -229,7 +242,9 @@ const Products: React.FC = ({ route, navigation }) => {
 					snapPoint={400}
 					avoidKeyboardLikeIOS={true}
 				>
-						<ModalContainer>
+						<ModalContainer
+							keyboardShouldPersistTaps={'handled'}
+						>
 								<ModalTitle>Adicionar produto</ModalTitle>
 								<ModalInputContainer>
 										<ModalInput>
@@ -260,7 +275,7 @@ const Products: React.FC = ({ route, navigation }) => {
 												<ModalInput>
 														<ModalTextInput
 																keyboardType='number-pad'
-																value={productPrice}
+																value={mask(productPrice)}
 																onChangeText={value => setProductPrice(value)}
 														/>
 												</ModalInput>
@@ -276,7 +291,8 @@ const Products: React.FC = ({ route, navigation }) => {
 														onClose();
 												}}
 										>
-												<ModalButtonText>Cancelar</ModalButtonText>
+										<ModalButtonText>Cancelar</ModalButtonText>
+
 										</ModalButton>
 										<ModalButton
 												onPress={handleSubmit}
@@ -289,5 +305,13 @@ const Products: React.FC = ({ route, navigation }) => {
 			</>
 	)
 }
+
+const styles = StyleSheet.create({
+  modal: {
+		flex: 1,
+    alignItems: "center",
+    backgroundColor: "lightgrey",
+  },
+});
 
 export default Products;

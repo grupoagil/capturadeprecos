@@ -1,6 +1,7 @@
 import React, { createContext, useState, useEffect } from 'react';
 import api from '../services/api';
 import AsyncStorage from '@react-native-community/async-storage';
+import axios from 'axios';
 
 interface AuthState {
     token: string;
@@ -83,7 +84,7 @@ export const AuthProvider: React.FC = ({ children }) => {
         await AsyncStorage.removeItem('@Formosa:user');
 
         setData({} as AuthState);
-    }
+    }   
 
     return(
         <AuthContext.Provider value={{ user: data.user, signIn, signOut, isLoading }}>

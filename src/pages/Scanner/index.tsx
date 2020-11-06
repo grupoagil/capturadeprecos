@@ -9,7 +9,6 @@ export default function Scanner() {
 
     const [data, setData] = useState();
 
-
     const [hasPermission, setHasPermission] = useState(null);
     const [scanned, setScanned] = useState(false);
 
@@ -19,19 +18,21 @@ export default function Scanner() {
             setHasPermission(status === 'granted');
         })();
     }, []);
+    
+    if (hasPermission === null) {
+      return <Text>Esperando permissão de acesso à câmera...</Text>;
+    }
+    if (hasPermission === false) {
+      return <Text>Acesso à cầmera negado.</Text>;
+    }
+    
     const handleBarCodeScanned = ({ type, data }) => {
         setData(data);
         setScanned(true);
         alert(`Código de barras escaneado com sucesso!${"\n"}${data}`);
     };
 
-    if (hasPermission === null) {
-        return <Text>Esperando permissão de acesso à câmera...</Text>;
-    }
-    if (hasPermission === false) {
-        return <Text>Acesso à cầmera negado.</Text>;
-    }
-
+  
     return (
         <View
             style={{

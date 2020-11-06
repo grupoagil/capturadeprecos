@@ -51,13 +51,17 @@ export const Title = styled.Text`
     color: #565651;
 `;
 
-export const Content = styled.FlatList`
+export const CardContainer = styled.ScrollView`
+
+`
+
+export const Content = styled.View`
     flex: 1;
-    border-top-left-radius: 25px;
-    border-top-right-radius: 25px;
+    border-radius: 25px;
     padding: 20px;
 
     background-color: #FFFFFF;
+    margin: 5px;
 `;
 
 export const Item = styled(Pressable)`
@@ -92,7 +96,7 @@ export const ItemBrand = styled.Text`
     font-size: 15px;
 `
 
-export const ModalContainer = styled.View`
+export const ModalContainer = styled.ScrollView`
     flex: 1;
     padding: 20px;
 `;
@@ -143,7 +147,7 @@ export const ModalTextInput = styled.TextInput<Props>`
     text-align: ${props => props.textAlign ? props.textAlign : 'left'};
 `;
 
-export const ModalButton = styled(Pressable)<Props>`
+export const ModalButton = styled(RectButton)<Props>`
     width: ${props => props.isButtonCancel === true ? '35%' : '55%'};
     height: 50px;
     background: ${props => props.isButtonCancel === true ? '#EF3131' : '#43D87F'};
@@ -163,4 +167,7 @@ export const FilterButton = styled(RectButton)`
     position: absolute;
     bottom: 5%;
     right: 10%;
+    background: #DE5F5F;
+    padding: 10px;
+    border-radius: 8px;
 `
