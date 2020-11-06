@@ -51,14 +51,7 @@ const EstablishmentSelect: React.FC = ({ navigation }) => {
 			} catch (err) {
 					console.log(err);
 
-					const response = await api.post(`/auth/refresh`, {}, {
-							headers: {
-									Authorization: `Bearer ${token}`
-							}
-					})
-
-					console.log(response.data)
-
+					setFetchedData(signOut)
 					setIsLoading(false);
 			}
 			setIsLoading(false);
@@ -67,6 +60,7 @@ const EstablishmentSelect: React.FC = ({ navigation }) => {
 	useEffect(() => {
 			fetchData();
 	}, [])
+
 
 	return (
 			<>
