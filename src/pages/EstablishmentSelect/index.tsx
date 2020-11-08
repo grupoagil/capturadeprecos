@@ -12,9 +12,7 @@ import {
 	CardText
 } from './styles';
 
-import {
-	StatusBar,
-} from 'react-native';
+import { StatusBar, RefreshControl} from 'react-native';
 
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 

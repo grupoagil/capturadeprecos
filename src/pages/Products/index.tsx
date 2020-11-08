@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
-import { Alert, StatusBar, View, StyleSheet, Modal, Button } from 'react-native';
+import { Alert, StatusBar, View, StyleSheet, Modal, Button, Text } from 'react-native';
 
 import Loading from '../../components/Loading';
 
@@ -15,6 +15,7 @@ import { Modalize } from 'react-native-modalize';
 
 import mask from '../../utils/mask'
 import Scanner from '../../components/Scanner'
+import BoxEmpty from '../../components/BoxEmpty'
 
 import {
 	Container,
@@ -41,6 +42,7 @@ import {
 	FilterButton,
 	CardContainer,
 } from './styles';
+import { number } from 'yup';
 
 
 const Products: React.FC = ({ route, navigation }) => {
@@ -119,6 +121,7 @@ const Products: React.FC = ({ route, navigation }) => {
 	}
 
 	// Função de enviar produto ao banco de dados = catalogar produto;
+	
 	async function handleSubmit() {
 			if (!productPrice || !barcode || !productName) {
 					Alert.alert('Todos os campos devem ser preenchidos.')
@@ -135,7 +138,7 @@ const Products: React.FC = ({ route, navigation }) => {
 									}
 							})
 
-							console.log(response.data);
+							console.log(response);
 							getData();
 					} catch (err) {
 							console.log(err)
@@ -148,6 +151,7 @@ const Products: React.FC = ({ route, navigation }) => {
 	useEffect(() => {
 		getData();
 	}, [])	
+
 	return (
 			<>
 				<StatusBar barStyle='dark-content' backgroundColor='#F5F4F4' />
@@ -171,50 +175,40 @@ const Products: React.FC = ({ route, navigation }) => {
 						</Header>
 						<Title>Produtos para catalogar hoje</Title>
 						{
-							isLoading === true ?
-								<Loading />
-								:
-								<CardContainer
-									showsVerticalScrollIndicator={false}
-									contentContainerStyle={{
-										paddingHorizontal: 16,
-										paddingBottom: 16,
-										maxWidth: "100%"}}
-								>
-
-								{products.map((item, index) => {
-									return (
-										<Content 
-										key={index}
-										>
-											<Item 
-												onPress={() => {
-												onOpen();
-												setProductName(item.produto.PROD_NOME);
-												setBarcode(`${item.produto.PROD_EAN}`);
-												setProductPrice('');
-												}}
-											>
-									
-											<ItemThumbnail
-												source={item.produto.PROD_LOGO ? { uri: item.produto.PROD_LOGO } : marketThumb}
-												style={{ resizeMode: 'cover' }}
-											/>
-
-											<ItemContent>
-												<ItemName
-													numberOfLines={2}
-													ellipsizeMode="tail"
-													>
-														{item.produto.PROD_NOME}</ItemName>
-													<ItemBrand>{item.produto.PROD_EAN}</ItemBrand>
-											</ItemContent>
-
-											</Item>
-										</Content>
-									)
-								})}
-								</CardContainer>
+							isLoading === true ? <Loading /> :
+									 <Content
+										showsVerticalScrollIndicator={false}
+										ListEmptyComponent={() => {
+												return (
+													<BoxEmpty />
+												);
+										}}
+										data={products}
+										keyExtractor={(item) => String(item.produto.id)}
+										renderItem={({ item }) => {
+											return (
+												<Item
+													onPress={() => {
+															onOpen();
+															setProductName(item.produto.PROD_NOME);
+															setBarcode(`${item.produto.PROD_EAN}`);
+															setProductPrice(item.produto.PROD_ULT_VALOR);
+													}}
+												>
+													<ItemThumbnail
+															source={item.produto.PROD_LOGO ? { uri: item.produto.PROD_LOGO } : marketThumb}
+															style={{ resizeMode: 'cover' }}
+													/>
+													<ItemContent>
+															<ItemName
+																	numberOfLines={2}
+																	ellipsizeMode="tail"
+															>{item.produto.PROD_NOME}</ItemName>
+															<ItemBrand>{item.produto.PROD_EAN}</ItemBrand>
+													</ItemContent>
+												</Item>
+												);
+											}}/>
 								}
 					</Container>
 
@@ -234,7 +228,6 @@ const Products: React.FC = ({ route, navigation }) => {
 							<Button title="Cancelar" onPress={() => setModalVisible(false)} />
 						</View>
 					</Modal>
-
 				{/* Modal adicionar produto */}
 
 				<Modalize
@@ -243,7 +236,7 @@ const Products: React.FC = ({ route, navigation }) => {
 					avoidKeyboardLikeIOS={true}
 				>
 						<ModalContainer
-							keyboardShouldPersistTaps={'handled'}
+							keyboardShouldPersistTaps="never"
 						>
 								<ModalTitle>Adicionar produto</ModalTitle>
 								<ModalInputContainer>
@@ -257,7 +250,7 @@ const Products: React.FC = ({ route, navigation }) => {
 												
 										</ModalInput>
 								</ModalInputContainer>
-								<ModalInputContainer>
+								<ModalInputContainer >
 										<ModalLabel>Nome do produto</ModalLabel>
 										<ModalInput>
 												<ModalTextInput
@@ -273,6 +266,7 @@ const Products: React.FC = ({ route, navigation }) => {
 										>
 												<ModalLabel>Preço</ModalLabel>
 												<ModalInput>
+														
 														<ModalTextInput
 																keyboardType='number-pad'
 																value={mask(productPrice)}

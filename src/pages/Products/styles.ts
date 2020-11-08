@@ -51,11 +51,11 @@ export const Title = styled.Text`
     color: #565651;
 `;
 
-export const CardContainer = styled.ScrollView`
+export const CardContainer = styled.FlatList`
 
 `
 
-export const Content = styled.View`
+export const Content = styled.FlatList`
     flex: 1;
     border-radius: 25px;
     padding: 20px;
@@ -147,7 +147,7 @@ export const ModalTextInput = styled.TextInput<Props>`
     text-align: ${props => props.textAlign ? props.textAlign : 'left'};
 `;
 
-export const ModalButton = styled(RectButton)<Props>`
+export const ModalButton = styled(Pressable)<Props>`
     width: ${props => props.isButtonCancel === true ? '35%' : '55%'};
     height: 50px;
     background: ${props => props.isButtonCancel === true ? '#EF3131' : '#43D87F'};
