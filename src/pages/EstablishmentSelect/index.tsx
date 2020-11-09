@@ -28,6 +28,7 @@ const EstablishmentSelect: React.FC = ({ navigation }) => {
 
 	const [fetchedData, setFetchedData] = useState([]);
 	const [isLoading, setIsLoading] = useState(false);
+	const [isRefreshing, setIsRefreshing] = useState(false)
 
 	const { signOut, user } = useContext(AuthContext);
 
@@ -55,6 +56,12 @@ const EstablishmentSelect: React.FC = ({ navigation }) => {
 			setIsLoading(false);
 	}
 
+	async function handleRefresh() {
+		setIsRefreshing(true)
+		await fetchData()
+		setIsRefreshing(false)
+	}
+
 	useEffect(() => {
 			fetchData();
 	}, [])
@@ -74,12 +81,13 @@ const EstablishmentSelect: React.FC = ({ navigation }) => {
 									<HeaderText>Olá, {user ? user.name : ''}!</HeaderText>
 							</Header>
 							{
-									isLoading === true ?
+									isLoading === true && !isRefreshing ?
 											<Loading />
 											:
 											<Content>
 													<Title>Selecione o estabelecimento</Title>
 													<List
+															refreshControl={ <RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} /> }
 															contentContainerStyle={{
 																	paddingHorizontal: 20
 															}}

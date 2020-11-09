@@ -1,21 +1,19 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { Alert, StatusBar, View, StyleSheet, Modal, Button, Text } from 'react-native';
+import AsyncStorage from '@react-native-community/async-storage';
+import { MaterialIcons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
+import { Modalize } from 'react-native-modalize';
+import { TextInputMask } from 'react-native-masked-text'
+import * as Yup from "yup"
 
-import Loading from '../../components/Loading';
 
 import api from '../../services/api';
 
-import AsyncStorage from '@react-native-community/async-storage';
-
-import { MaterialIcons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
-
-import marketThumb from '../../assets/images/marketThumb.png';
-
-import { Modalize } from 'react-native-modalize';
-
-import mask from '../../utils/mask'
+import Loading from '../../components/Loading';
 import Scanner from '../../components/Scanner'
 import BoxEmpty from '../../components/BoxEmpty'
+
+import marketThumb from '../../assets/images/marketThumb.png';
 
 import {
 	Container,
@@ -40,9 +38,8 @@ import {
 	ModalButton,
 	ModalButtonText,
 	FilterButton,
-	CardContainer,
+	ItemContainer,
 } from './styles';
-import { number } from 'yup';
 
 
 const Products: React.FC = ({ route, navigation }) => {
@@ -73,27 +70,34 @@ const Products: React.FC = ({ route, navigation }) => {
 
 	// modal filter
 	const [modalVisible, setModalVisible] = React.useState(false);
-	const [type, setType] = React.useState("");
-  const [data, setData] = React.useState("");
-
+	const [data, setData] = React.useState("")
+	const [type, setType] = React.useState("")
 	
 	// Código escaneado
 	
 	// Pesquisar do produto por código de barras
 	const onCodeScanned = useCallback(async (type, data) => {
 			setIsLoading(true)
-			setType(type);
+			setType(type)
 			setData(data);
-			setModalVisible(false);
+			Alert.alert(`Código de barras escaneado com sucesso!${"\n"}${data}`)
 			
 			const token = await AsyncStorage.getItem('@Formosa:token');
-			const response = await api.get(`/captura/empresas/${route.params.EMP_ID}/produtos`, {
+			const response = await api.get(`/captura/barcode/${route.params.EMP_ID}/${data}`, {
 				headers: {
 					Authorization: `Bearer ${token}`
 				}
 			})
 
-			alert(`Código de barras escaneado com sucesso!${"\n"}${data}`)
+			const filterProductName = response.data.PROD_NOME
+			const filterProductBarcode = response.data.PROD_EAN
+			
+			onOpen()
+			setBarcode(filterProductBarcode)
+			setProductName(filterProductName)
+			
+			setModalVisible(false);
+			
 			setIsLoading(false)
 	}, [data])
 	
@@ -123,8 +127,11 @@ const Products: React.FC = ({ route, navigation }) => {
 	// Função de enviar produto ao banco de dados = catalogar produto;
 	
 	async function handleSubmit() {
+
 			if (!productPrice || !barcode || !productName) {
 					Alert.alert('Todos os campos devem ser preenchidos.')
+			} else if(productPrice === "0.00" || productPrice === "0,00") {
+				Alert.alert('Error', 'O preço não pode ser R$0,00')
 			} else {
 					try {
 							const token = await AsyncStorage.getItem('@Formosa:token');
@@ -187,26 +194,28 @@ const Products: React.FC = ({ route, navigation }) => {
 										keyExtractor={(item) => String(item.produto.id)}
 										renderItem={({ item }) => {
 											return (
-												<Item
-													onPress={() => {
-															onOpen();
-															setProductName(item.produto.PROD_NOME);
-															setBarcode(`${item.produto.PROD_EAN}`);
-															setProductPrice(item.produto.PROD_ULT_VALOR);
-													}}
-												>
-													<ItemThumbnail
-															source={item.produto.PROD_LOGO ? { uri: item.produto.PROD_LOGO } : marketThumb}
-															style={{ resizeMode: 'cover' }}
-													/>
-													<ItemContent>
-															<ItemName
-																	numberOfLines={2}
-																	ellipsizeMode="tail"
-															>{item.produto.PROD_NOME}</ItemName>
-															<ItemBrand>{item.produto.PROD_EAN}</ItemBrand>
-													</ItemContent>
-												</Item>
+												<ItemContainer>
+													<Item
+														onPress={() => {
+																onOpen();
+																setProductName(item.produto.PROD_NOME);
+																setBarcode(`${item.produto.PROD_EAN}`);
+																setProductPrice(item.produto.PROD_ULT_VALOR);
+														}}
+													>
+														<ItemThumbnail
+																source={item.produto.PROD_LOGO ? { uri: item.produto.PROD_LOGO } : marketThumb}
+																style={{ resizeMode: 'cover' }}
+														/>
+														<ItemContent>
+																<ItemName
+																		numberOfLines={2}
+																		ellipsizeMode="tail"
+																>{item.produto.PROD_NOME}</ItemName>
+																<ItemBrand>{item.produto.PROD_EAN}</ItemBrand>
+														</ItemContent>
+													</Item>
+												</ItemContainer>
 												);
 											}}/>
 								}
@@ -236,7 +245,7 @@ const Products: React.FC = ({ route, navigation }) => {
 					avoidKeyboardLikeIOS={true}
 				>
 						<ModalContainer
-							keyboardShouldPersistTaps="never"
+							keyboardShouldPersistTaps="always"
 						>
 								<ModalTitle>Adicionar produto</ModalTitle>
 								<ModalInputContainer>
@@ -267,9 +276,18 @@ const Products: React.FC = ({ route, navigation }) => {
 												<ModalLabel>Preço</ModalLabel>
 												<ModalInput>
 														
-														<ModalTextInput
-																keyboardType='number-pad'
-																value={mask(productPrice)}
+														<TextInputMask
+																style={styles.maskPrice}
+																type="money"
+																keyboardType="number-pad"
+																value={productPrice}
+																options={{
+																	precision: 2,
+																	separator: ',',
+																	delimiter: '.',
+																	unit: 'R$',
+																	suffixUnit: ''
+																}}
 																onChangeText={value => setProductPrice(value)}
 														/>
 												</ModalInput>
@@ -305,7 +323,15 @@ const styles = StyleSheet.create({
 		flex: 1,
     alignItems: "center",
     backgroundColor: "lightgrey",
-  },
+	},
+	maskPrice: {
+		fontFamily: 'Poppins_700Bold',
+		fontSize: 15,
+		flex: 1,
+		color: '#8e8e8e',
+		textAlign: 'left',
+		marginLeft: 5,
+	}
 });
 
 export default Products;
