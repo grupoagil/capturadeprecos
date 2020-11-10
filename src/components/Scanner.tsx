@@ -47,12 +47,12 @@ export default function Scanner(props) {
       <View style={styles.layerBottom} />
 
 
-      {scanned && (
+      {/* {scanned && (
         <Button
           title={"Repetir Escaneamento"}
           onPress={() => setScanned(false)}
         />
-      )}
+      )} */}
     </View>
   );
 }

@@ -77,28 +77,42 @@ const Products: React.FC = ({ route, navigation }) => {
 	
 	// Pesquisar do produto por código de barras
 	const onCodeScanned = useCallback(async (type, data) => {
-			setIsLoading(true)
-			setType(type)
-			setData(data);
-			Alert.alert(`Código de barras escaneado com sucesso!${"\n"}${data}`)
-			
-			const token = await AsyncStorage.getItem('@Formosa:token');
-			const response = await api.get(`/captura/barcode/${route.params.EMP_ID}/${data}`, {
-				headers: {
-					Authorization: `Bearer ${token}`
-				}
-			})
+		setIsLoading(true)
+		const token = await AsyncStorage.getItem('@Formosa:token')
 
-			const filterProductName = response.data.PROD_NOME
-			const filterProductBarcode = response.data.PROD_EAN
-			
-			onOpen()
-			setBarcode(filterProductBarcode)
-			setProductName(filterProductName)
-			
-			setModalVisible(false);
-			
-			setIsLoading(false)
+			try {
+				setType(type)
+				setData(data);
+				
+				const response = await api.get(`/captura/barcode/${route.params.EMP_ID}/${data}`, {
+					headers: {
+						Authorization: `Bearer ${token}`
+					}
+				})
+
+				const filterProductName = response.data.PROD_NOME
+				Alert.alert(`Código de barras escaneado com sucesso!${"\n"}${data}`)
+
+				
+				onOpen()
+				setBarcode(data)
+				setProductName(filterProductName)
+				setProductPrice('0,00')
+				
+				// setModalVisible(false);
+				
+				// setIsLoading(false)
+				
+			} catch (error) {
+				console.log(error)
+
+				Alert.alert('Error', 'Produto não encontrado', [
+					{text: 'OK', onPress: () => console.log('alert closed')}
+				])
+				
+			}
+		setModalVisible(false);
+		setIsLoading(false)
 	}, [data])
 	
 
@@ -145,7 +159,7 @@ const Products: React.FC = ({ route, navigation }) => {
 									}
 							})
 
-							console.log(response);
+							console.log(response.data);
 							getData();
 					} catch (err) {
 							console.log(err)
