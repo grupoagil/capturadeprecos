@@ -4,8 +4,8 @@ import { createStackNavigator } from '@react-navigation/stack';
 
 import HomeScreen from '../pages/HomeScreen';
 import EstablishmentSelect from '../pages/EstablishmentSelect';
+import ProductsCataloged from '../pages/ProductsCataloged';
 import Products from '../pages/Products/';
-import Scanner from '../pages/Scanner';
 
 
 import { AuthContext } from '../contexts/auth';
@@ -32,7 +32,7 @@ const Routes: React.FC = () => {
           <>
             <Stack.Screen name="EstablishmentSelect" component={EstablishmentSelect} />
             <Stack.Screen name="Products" component={Products} />
-            <Stack.Screen name="Scanner" component={Scanner} />
+            <Stack.Screen name="ProductsCataloged" component={ProductsCataloged} />
 
           </>
           :

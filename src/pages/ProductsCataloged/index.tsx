@@ -4,8 +4,6 @@ import AsyncStorage from '@react-native-community/async-storage';
 import { MaterialIcons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 import { Modalize } from 'react-native-modalize';
 import { TextInputMask } from 'react-native-masked-text'
-import * as Yup from "yup"
-
 
 import api from '../../services/api';
 
@@ -42,7 +40,7 @@ import {
 } from './styles';
 
 
-const Products: React.FC = ({ route, navigation }) => {
+const ProductsCataloged: React.FC = ({ route, navigation }) => {
 	// Modalize Ref e Funções
 	const modalizeRef = useRef<Modalize>(null);
 
@@ -66,7 +64,7 @@ const Products: React.FC = ({ route, navigation }) => {
 
 
 	// Array de Produtos Catalogados
-	const [products, setProducts] = useState([]);
+	const [productsCataloged, setProductsCataloged] = useState([]);
 
 	// modal filter
 	const [modalVisible, setModalVisible] = React.useState(false);
@@ -99,7 +97,7 @@ const Products: React.FC = ({ route, navigation }) => {
 				onOpen()
 				setBarcode(data)
 				setProductName(filterProductName)
-				setProductPrice('R$0,00')
+				setProductPrice('0,00')
 				
 				// setModalVisible(false);
 				
@@ -124,14 +122,14 @@ const Products: React.FC = ({ route, navigation }) => {
 			try {
 					const token = await AsyncStorage.getItem('@Formosa:token');
 
-					const response = await api.get(`/captura/empresas/${route.params.EMP_ID}/produtos`, {
+					const response = await api.get(`/captura/catalogados/empresas/${route.params.EMP_ID}/produtos`, {
 							headers: {
 									Authorization: `Bearer ${token}`
 							}
 					});
 					
 					
-					setProducts(response.data);
+					setProductsCataloged(response.data);
 					setIsLoading(false);
 			} catch (err) {
 					console.log(err);
@@ -161,7 +159,7 @@ const Products: React.FC = ({ route, navigation }) => {
 									}
 							})
 
-							console.log(response);
+							console.log(response.data);
 							getData();
 					} catch (err) {
 							console.log(err)
@@ -196,7 +194,7 @@ const Products: React.FC = ({ route, navigation }) => {
 								<SupermarketName>{route.params.EMP_NAME}</SupermarketName>
 							</HeaderTitleContainer>
 						</Header>
-						<Title>Produtos para catalogar hoje</Title>
+						<Title>Produtos catalogados</Title>
 						{
 							isLoading === true ? <Loading /> :
 									 <Content
@@ -206,12 +204,13 @@ const Products: React.FC = ({ route, navigation }) => {
 													<BoxEmpty />
 												);
 										}}
-										data={products}
+										data={productsCataloged}
 										keyExtractor={(item) => String(item.produto.id)}
 										renderItem={({ item }) => {
 											return (
 												<ItemContainer>
 													<Item
+														key={item.produto.id}
 														onPress={() => {
 																onOpen();
 																setProductName(item.produto.PROD_NOME);
@@ -263,7 +262,7 @@ const Products: React.FC = ({ route, navigation }) => {
 						<ModalContainer
 							keyboardShouldPersistTaps="always"
 						>
-								<ModalTitle>Adicionar produto</ModalTitle>
+								<ModalTitle>Atualizar produto</ModalTitle>
 								<ModalInputContainer>
 										<ModalInput>
 											<MaterialCommunityIcons name="barcode-scan" size={30} color="#757474" />
@@ -350,4 +349,4 @@ const styles = StyleSheet.create({
 	}
 });
 
-export default Products;
+export default ProductsCataloged;

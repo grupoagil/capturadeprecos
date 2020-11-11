@@ -1,7 +1,7 @@
 import { Pressable } from 'react-native';
 import styled from 'styled-components/native';
 
-export const Container = styled.View`
+export const Container = styled.ScrollView`
 	flex: 1;
 `;
 
@@ -25,7 +25,7 @@ export const HeaderText = styled.Text`
 
 export const Content = styled.View`
 	flex: 1;
-	padding: 20px 0;
+	padding: 20px 0px;
 	background-color: #FFFFFF;
 `;
 
@@ -42,13 +42,13 @@ export const List = styled.FlatList`
 `;
 
 export const Card = styled(Pressable)`
-	width: 50%;
+	width: 160px;
 	height: 200px;
 	background-color: #f9f9f9;
 	border-radius: 15px;
-	margin: 5px 0;
 	elevation: 2;
 	box-shadow: 1px 1px 5px rgba(0, 0, 0, 0.2);
+	margin: 5px 3px;
 `;
 
 export const Thumbnail = styled.Image`
