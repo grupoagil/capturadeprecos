@@ -13,6 +13,12 @@
     "updates": {
       "fallbackToCacheTimeout": 0
     },
+    "notification": {
+      "icon": "./assets/notification.png",
+      "color": "#002C56",
+      "iosDisplayInForeground": true,
+      "androidMode": "default"
+    },
     "assetBundlePatterns": [
       "**/*"
     ],
@@ -24,6 +30,8 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#FFFFFF"
       },
+      "useNextNotificationsApi": true,
+      "googleServicesFile": "./google-services.json",
       "package": "com.luccaroli.capturadeprecos"
     },
     "web": {
