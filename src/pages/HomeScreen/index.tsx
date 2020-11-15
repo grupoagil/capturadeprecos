@@ -56,7 +56,7 @@ const HomeScreen: React.FC = () => {
 								onPress={() => Keyboard.dismiss()}
 						>
 								<Container>
-										<Title>Captura de Preços</Title>
+										<Title>Pesquisa de Preços</Title>
 												{
 														isLoading === true ?
 														<Loading />

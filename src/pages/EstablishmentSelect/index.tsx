@@ -11,6 +11,8 @@ import { Platform } from 'react-native';
 import api from '../../services/api';
 
 import Loading from '../../components/Loading';
+import marketThumb from '../../assets/images/marketThumb.png';
+
 
 import {
 	Container,
@@ -97,7 +99,7 @@ const EstablishmentSelect: React.FC = ({ navigation }) => {
       headers: {
         Authorization: `Bearer ${userToken}`
       }
-    })
+		})
 		console.log(response.data)
     return token;
   }
@@ -119,16 +121,14 @@ const EstablishmentSelect: React.FC = ({ navigation }) => {
 							headers: {
 									Authorization: `Bearer ${token}`
 							}
-					}
-					);
+					});
 
 					setFetchedData(Object.values(response.data));
 					setIsLoading(false);
 			} catch (err) {
-					console.log(err);
-
-					setFetchedData(signOut)
-					setIsLoading(false);
+				console.log(err)
+				
+				setFetchedData(signOut)
 			}
 			setIsLoading(false);
 	}
@@ -149,10 +149,8 @@ const EstablishmentSelect: React.FC = ({ navigation }) => {
 				setCataloged(Object.values(response.data));
 				setIsLoading(false);
 		} catch (err) {
-				console.log(err);
-
-				setCataloged(signOut)
-				setIsLoading(false);
+			setCataloged(signOut)
+			console.log(err)
 		}
 		setIsLoading(false);
 	}
@@ -160,6 +158,7 @@ const EstablishmentSelect: React.FC = ({ navigation }) => {
 	async function handleRefresh() {
 		setIsRefreshing(true)
 		await fetchData()
+		await getCataloged()
 		setIsRefreshing(false)
 	}
 
@@ -188,7 +187,7 @@ const EstablishmentSelect: React.FC = ({ navigation }) => {
 									<Loading />
 									:
 									<Content>
-										<Title>Estabelecimentos para catalogar</Title>
+										<Title>Estabelecimentos para pesquisar</Title>
 										<List
 											contentContainerStyle={{
 													paddingHorizontal: 20
@@ -217,7 +216,7 @@ const EstablishmentSelect: React.FC = ({ navigation }) => {
 														}}
 														style={index % 2 === 0 ? { marginRight: 2.5 } : { marginLeft: 2.5 }}
 														>
-															<Thumbnail source={{ uri: item.EMP_LOGO }} style={{ resizeMode: 'cover' }} />
+															<Thumbnail source={marketThumb} style={{ resizeMode: 'cover' }} />
 															<CardTextContainer>
 																	<CardText>{item.EMP_NOME.trim()}</CardText>
 															</CardTextContainer>
@@ -227,8 +226,10 @@ const EstablishmentSelect: React.FC = ({ navigation }) => {
 										/>
 									</Content>
 								}
+						
+						{ isLoading === true && !isRefreshing ? <Loading /> :
 								<Content>
-									<Title>Catalogados</Title>
+									<Title>Pesquisados</Title>
 									<List
 										contentContainerStyle={{
 												paddingHorizontal: 20
@@ -257,7 +258,7 @@ const EstablishmentSelect: React.FC = ({ navigation }) => {
 														}}
 														style={index % 2 === 0 ? { marginRight: 2.5 } : { marginLeft: 2.5 }}
 													>
-														<Thumbnail source={{ uri: item.EMP_LOGO }} style={{ resizeMode: 'cover' }} />
+														<Thumbnail source={marketThumb} style={{ resizeMode: 'cover' }} />
 														<CardTextContainer>
 																<CardText>{item.EMP_NOME.trim()}</CardText>
 														</CardTextContainer>
@@ -266,6 +267,7 @@ const EstablishmentSelect: React.FC = ({ navigation }) => {
 										}}
 									/>
 								</Content>
+								}
 				</Container>
 			</>
 	)

@@ -20,6 +20,7 @@ const Routes: React.FC = () => {
   if(isLoading === true) {
     return <Loading />
   }
+  
 
   return (
     <NavigationContainer>

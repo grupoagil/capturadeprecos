@@ -1,27 +1,26 @@
 import React from 'react';
-import { CommonActions, useNavigation, useNavigationState } from '@react-navigation/native'
+import { useNavigation } from '@react-navigation/native'
 
-import { Container, BoxIcon, ButtonNavigate, ButtonNavigateText, BoxTitle } from './styles';
-import boxIcon from '../../assets/images/box.png'
+import { Container, ButtonNavigate, ButtonNavigateText, BoxTitle, Content } from './styles';
 
 const BoxEmpty: React.FC = () => {
   const navigation = useNavigation()
 
   function handleNavigateToEmpSelect() {
-    navigation.dispatch(
-      CommonActions.navigate('EstablishmentSelect')
-    )
+    navigation.navigate('EstablishmentSelect')
   }
 
   return (
     <Container>
       
-      <BoxIcon source={boxIcon} />
-      <BoxTitle>Sem produtos para catalogar</BoxTitle>
+      <Content>
+        <BoxTitle>Sem produtos para pesquisar</BoxTitle>
 
-      <ButtonNavigate onPress={handleNavigateToEmpSelect}>
-        <ButtonNavigateText>OK</ButtonNavigateText>
-      </ButtonNavigate>
+        <ButtonNavigate onPress={handleNavigateToEmpSelect}>
+          <ButtonNavigateText>OK</ButtonNavigateText>
+        </ButtonNavigate>
+      </Content>
+     
 
     </Container>
   )

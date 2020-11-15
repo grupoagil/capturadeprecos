@@ -58,7 +58,6 @@ const ProductsCataloged: React.FC = ({ route, navigation }) => {
 	const [productName, setProductName] = useState('');
 	const [productPrice, setProductPrice] = useState('');
 
-
 	// Estados de atividade
 	const [isLoading, setIsLoading] = useState(false);
 
@@ -74,46 +73,46 @@ const ProductsCataloged: React.FC = ({ route, navigation }) => {
 	// Código escaneado
 	
 	// Pesquisar do produto por código de barras
-	const onCodeScanned = useCallback(async (type, data) => {
-		setIsLoading(true)
-		const token = await AsyncStorage.getItem('@Formosa:token')
+	// const onCodeScanned = useCallback(async (type, data) => {
+	// 	setIsLoading(true)
+	// 	const token = await AsyncStorage.getItem('@Formosa:token')
 
-			try {
-				setType(type)
-				setData(data);
+	// 		try {
+	// 			setType(type)
+	// 			setData(data);
 				
-				const response = await api.get(`/captura/barcode/${route.params.EMP_ID}/${data}`, {
-					headers: {
-						Authorization: `Bearer ${token}`
-					}
-				})
+	// 			const response = await api.get(`/captura/barcode/${route.params.EMP_ID}/${data}`, {
+	// 				headers: {
+	// 					Authorization: `Bearer ${token}`
+	// 				}
+	// 			})
 
-				const filterProductName = response.data.PROD_NOME
-				Alert.alert(`Código de barras escaneado com sucesso!${"\n"}${data}`)
-				if (productPrice === "0.00" || productPrice === "R$0,00") {
-					Alert.alert('Error', 'preço não pode ser 0,00')
-				}
+	// 			const filterProductName = response.data.PROD_NOME
+	// 			Alert.alert(`Código de barras escaneado com sucesso!${"\n"}${data}`)
+	// 			if (productPrice === "0.00" || productPrice === "R$0,00") {
+	// 				Alert.alert('Error', 'preço não pode ser 0,00')
+	// 			}
 				
-				onOpen()
-				setBarcode(data)
-				setProductName(filterProductName)
-				setProductPrice('0,00')
+	// 			onOpen()
+	// 			setBarcode(data)
+	// 			setProductName(filterProductName)
+	// 			setProductPrice('0,00')
 				
-				// setModalVisible(false);
+	// 			// setModalVisible(false);
 				
-				// setIsLoading(false)
+	// 			// setIsLoading(false)
 				
-			} catch (error) {
-				console.log(error)
+	// 		} catch (error) {
+	// 			console.log(error)
 
-				Alert.alert('Error', 'Produto não encontrado', [
-					{text: 'OK', onPress: () => console.log('alert closed')}
-				])
+	// 			Alert.alert('Error', 'Produto não encontrado', [
+	// 				{text: 'OK', onPress: () => console.log('alert closed')}
+	// 			])
 				
-			}
-		setModalVisible(false);
-		setIsLoading(false)
-	}, [data])
+	// 		}
+	// 	setModalVisible(false);
+	// 	setIsLoading(false)
+	// }, [data])
 	
 
 	// Função de buscar produtos para catalogar
@@ -127,7 +126,6 @@ const ProductsCataloged: React.FC = ({ route, navigation }) => {
 									Authorization: `Bearer ${token}`
 							}
 					});
-					
 					
 					setProductsCataloged(response.data);
 					setIsLoading(false);
@@ -144,7 +142,7 @@ const ProductsCataloged: React.FC = ({ route, navigation }) => {
 
 			if (!productPrice || !barcode || !productName) {
 					Alert.alert('Todos os campos devem ser preenchidos.')
-			} else if(productPrice === "0.00" || productPrice === "R$0,00") {
+			} else if(productPrice === "0.00" || productPrice === "R$0,00" || productPrice === "0,00") {
 				Alert.alert('Error', 'O preço não pode ser R$0,00')
 			} else {
 					try {
@@ -187,23 +185,18 @@ const ProductsCataloged: React.FC = ({ route, navigation }) => {
 								onPress={() => navigation.goBack()}
 							/>
 							<Thumbnail
-								source={{ uri: route.params.EMP_THUMB }}
+								source={marketThumb}
 								style={{ resizeMode: 'cover' }}
 							/>
 							<HeaderTitleContainer>
 								<SupermarketName>{route.params.EMP_NAME}</SupermarketName>
 							</HeaderTitleContainer>
 						</Header>
-						<Title>Produtos catalogados</Title>
+						<Title>Produtos pesquisados</Title>
 						{
 							isLoading === true ? <Loading /> :
 									 <Content
 										showsVerticalScrollIndicator={false}
-										ListEmptyComponent={() => {
-												return (
-													<BoxEmpty />
-												);
-										}}
 										data={productsCataloged}
 										keyExtractor={(item) => String(item.produto.id)}
 										renderItem={({ item }) => {
@@ -215,11 +208,11 @@ const ProductsCataloged: React.FC = ({ route, navigation }) => {
 																onOpen();
 																setProductName(item.produto.PROD_NOME);
 																setBarcode(`${item.produto.PROD_EAN}`);
-																setProductPrice(item.produto.PROD_ULT_VALOR);
+																setProductPrice(item.CAT_PRECO);
 														}}
 													>
 														<ItemThumbnail
-																source={item.produto.PROD_LOGO ? { uri: item.produto.PROD_LOGO } : marketThumb}
+																source={marketThumb}
 																style={{ resizeMode: 'cover' }}
 														/>
 														<ItemContent>
@@ -237,7 +230,7 @@ const ProductsCataloged: React.FC = ({ route, navigation }) => {
 					</Container>
 
 					{/* modal filter */}
-					<FilterButton onPress={() => setModalVisible(true)}>
+					{/* <FilterButton onPress={() => setModalVisible(true)}>
 							<Feather name="camera" size={24} color="#fff" />
 					</FilterButton>
 
@@ -251,7 +244,7 @@ const ProductsCataloged: React.FC = ({ route, navigation }) => {
 							<Scanner onCodeScanned={onCodeScanned} />
 							<Button title="Cancelar" onPress={() => setModalVisible(false)} />
 						</View>
-					</Modal>
+					</Modal> */}
 				{/* Modal adicionar produto */}
 
 				<Modalize

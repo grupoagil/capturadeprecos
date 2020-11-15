@@ -1,7 +1,6 @@
-import React, { createContext, useState, useEffect } from 'react';
+import React, { createContext, useState, useEffect, useContext } from 'react';
 import api from '../services/api';
 import AsyncStorage from '@react-native-community/async-storage';
-import axios from 'axios';
 
 interface AuthState {
     token: string;

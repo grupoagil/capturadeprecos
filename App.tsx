@@ -10,6 +10,7 @@ import {
 } from '@expo-google-fonts/poppins'
 
 import Routes from './src/routes';
+import api from './src/services/api';
 
 const App: React.FC = () => {
   const [fontsLoaded] = useFonts({

@@ -1,6 +1,6 @@
 {
   "expo": {
-    "name": "capturadeprecos",
+    "name": "Pesquisa de Preço",
     "slug": "capturadeprecos",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -8,14 +8,14 @@
     "splash": {
       "image": "./assets/splash.png",
       "resizeMode": "contain",
-      "backgroundColor": "#ffffff"
+      "backgroundColor": "#DE5F5F"
     },
     "updates": {
       "fallbackToCacheTimeout": 0
     },
     "notification": {
       "icon": "./assets/notification.png",
-      "color": "#002C56",
+      "color": "#DE5F5F",
       "iosDisplayInForeground": true,
       "androidMode": "default"
     },
@@ -28,7 +28,7 @@
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#FFFFFF"
+        "backgroundColor": "#DE5F5F"
       },
       "useNextNotificationsApi": true,
       "googleServicesFile": "./google-services.json",

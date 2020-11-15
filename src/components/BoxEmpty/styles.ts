@@ -5,8 +5,13 @@ export const Container = styled.View`
   flex: 1;
   align-items: center;
   justify-content: center;
-  top: 40%;
 `;
+
+export const Content = styled.View`
+  align-items: center;
+  justify-content: center;
+  margin-top: 35%;
+`
 
 export const BoxTitle = styled.Text`
   font-family: 'Poppins_600SemiBold';
@@ -14,12 +19,7 @@ export const BoxTitle = styled.Text`
   font-size: 18px;
   color: #333;
 `
-
-export const BoxIcon = styled.Image`
-  width: 150px;
-  height: 150px;
-  top: -10px;
-` 
+ 
 export const ButtonNavigate = styled(RectButton)`
   padding: 16px 40px;
   border-radius: 15px;
