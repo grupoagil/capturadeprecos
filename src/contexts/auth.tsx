@@ -19,6 +19,7 @@ interface AuthContextData {
     isLoading: boolean;
 }
 
+
 export const AuthContext = createContext<AuthContextData>({} as AuthContextData);
 
 export const AuthProvider: React.FC = ({ children }) => {

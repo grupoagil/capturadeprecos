@@ -111,6 +111,19 @@ const EstablishmentSelect: React.FC = ({ navigation }) => {
 
 	const { signOut, user } = useContext(AuthContext);
 
+	api.interceptors.response.use(
+		response => {
+			return response
+		},
+		error => {
+			if (error.response.status === 401) {
+				signOut()
+			}
+			return Promise.reject(error)
+		}
+	
+	)
+
 	async function fetchData() {
 			const token = await AsyncStorage.getItem('@Formosa:token');
 			setIsLoading(true);
