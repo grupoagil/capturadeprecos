@@ -123,12 +123,12 @@ const EstablishmentSelect: React.FC = ({ navigation }) => {
 							}
 					});
 
+
 					setFetchedData(Object.values(response.data));
 					setIsLoading(false);
 			} catch (err) {
+
 				console.log(err)
-				
-				setFetchedData(signOut)
 			}
 			setIsLoading(false);
 	}
@@ -149,7 +149,7 @@ const EstablishmentSelect: React.FC = ({ navigation }) => {
 				setCataloged(Object.values(response.data));
 				setIsLoading(false);
 		} catch (err) {
-			setCataloged(signOut)
+			// setCataloged(signOut)
 			console.log(err)
 		}
 		setIsLoading(false);
