@@ -171,6 +171,7 @@ const Products: React.FC = ({ route, navigation }) => {
 							console.log(err)
 					}
 					onClose();
+					setChecked('0')
 			}
 	}
 
