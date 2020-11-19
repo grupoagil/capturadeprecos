@@ -7,7 +7,6 @@ import EstablishmentSelect from '../pages/EstablishmentSelect';
 import ProductsCataloged from '../pages/ProductsCataloged';
 import Products from '../pages/Products/';
 
-
 import { AuthContext } from '../contexts/auth';
 
 import Loading from '../components/Loading';
@@ -34,7 +33,6 @@ const Routes: React.FC = () => {
             <Stack.Screen name="EstablishmentSelect" component={EstablishmentSelect} />
             <Stack.Screen name="Products" component={Products} />
             <Stack.Screen name="ProductsCataloged" component={ProductsCataloged} />
-
           </>
           :
           <Stack.Screen name="Home" component={HomeScreen} />

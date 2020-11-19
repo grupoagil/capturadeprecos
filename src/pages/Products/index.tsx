@@ -1,11 +1,13 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
-import { Alert, StatusBar, View, StyleSheet, Modal, Button, Text } from 'react-native';
+import { Alert, StatusBar, View, StyleSheet, Modal, Button, Text, Platform, Image } from 'react-native';
 import AsyncStorage from '@react-native-community/async-storage';
 import { MaterialIcons, MaterialCommunityIcons, Feather, Ionicons } from '@expo/vector-icons';
 import { Modalize } from 'react-native-modalize';
 import { TextInputMask } from 'react-native-masked-text'
 import { RadioButton, Modal as ModalDone } from 'react-native-paper'
 import { RectButton } from 'react-native-gesture-handler';
+import * as ImagePicker from 'expo-image-picker';
+
 
 import api from '../../services/api';
 
@@ -69,6 +71,10 @@ const Products: React.FC = ({ route, navigation }) => {
 
 	// Array de Produtos Catalogados
 	const [products, setProducts] = useState([]);
+
+
+	// image
+	const [image, setImage] = useState('');
 
 	// modal filter
 	const [modalVisible, setModalVisible] = React.useState(false);
@@ -191,72 +197,96 @@ const Products: React.FC = ({ route, navigation }) => {
 		getData()
 	}, [])
 
+	const pickImage = useCallback(async () => {
+    if (Platform.OS !== 'web') {
+      const { status } = await ImagePicker.requestCameraRollPermissionsAsync();
+      if (status !== 'granted') {
+        alert('Sorry, we need camera roll permissions to make this work!');
+      }
+    }
+
+    const result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+      quality: 1,
+    });
+
+    if (!result.cancelled) {
+      const localUrl = result.uri
+
+      setImage(localUrl);
+    }
+  }, [setImage])
+
+	console.log(image)
+
 
 	useEffect(() => {
 		getData();
 	}, [])	
 
 	return (
-			<>
-				<StatusBar barStyle='dark-content' backgroundColor='#F5F4F4' />
+		<>
+			<StatusBar barStyle='dark-content' backgroundColor='#F5F4F4' />
 
-				{/* Listagem de produtos */}
-				<Container>
-						<Header>
-							<MaterialIcons
-								name="chevron-left"
-								size={32}
-								color="black"
-								onPress={() => navigation.goBack()}
-							/>
-							<Thumbnail
-								source={marketThumb}
-								style={{ resizeMode: 'cover' }}
-							/>
-							<HeaderTitleContainer>
-								<SupermarketName>{route.params.EMP_NAME}</SupermarketName>
-							</HeaderTitleContainer>
-						</Header>
-						<Title>Produtos para pesquisar hoje</Title>
-						{
-							isLoading === true ? <Loading /> :
-									 <Content
-										showsVerticalScrollIndicator={false}
-										ListEmptyComponent={() => {
-												return (
-													<BoxEmpty />
-												);
+			{/* Listagem de produtos */}
+			<Container>
+				<Header>
+					<MaterialIcons
+						name="chevron-left"
+						size={32}
+						color="black"
+						onPress={() => navigation.goBack()}
+					/>
+					<Thumbnail
+						source={marketThumb}
+						style={{ resizeMode: 'cover' }}
+					/>
+					<HeaderTitleContainer>
+						<SupermarketName>{route.params.EMP_NAME}</SupermarketName>
+					</HeaderTitleContainer>
+				</Header>
+				<Title>Produtos para pesquisar hoje</Title>
+				{
+					isLoading === true ? <Loading /> :
+						<Content
+							showsVerticalScrollIndicator={false}
+							ListEmptyComponent={() => {
+									return (
+										<BoxEmpty />
+									);
+							}}
+							data={products}
+							keyExtractor={(item) => String(item.produto.id)}
+							renderItem={({ item }) => {
+							return (
+								<ItemContainer>
+									<Item
+										onPress={() => {
+											onOpen();
+											setProductName(item.produto.PROD_NOME);
+											setBarcode(`${item.produto.PROD_EAN}`);
+											setProductPrice('0,00');
 										}}
-										data={products}
-										keyExtractor={(item) => String(item.produto.id)}
-										renderItem={({ item }) => {
-											return (
-												<ItemContainer>
-													<Item
-														onPress={() => {
-																onOpen();
-																setProductName(item.produto.PROD_NOME);
-																setBarcode(`${item.produto.PROD_EAN}`);
-																setProductPrice('0,00');
-														}}
-													>
-														<ItemThumbnail
-																source={marketThumb}
-																style={{ resizeMode: 'cover' }}
-														/>
-														<ItemContent>
-																<ItemName
-																		numberOfLines={2}
-																		ellipsizeMode="tail"
-																>{item.produto.PROD_NOME}</ItemName>
-																<ItemBrand>{item.produto.PROD_EAN}</ItemBrand>
-														</ItemContent>
-													</Item>
-												</ItemContainer>
-												);
-											}}/>
-								}
-					</Container>
+									>
+										<ItemThumbnail
+											source={marketThumb}
+											style={{ resizeMode: 'cover' }}
+										/>
+										<ItemContent>
+											<ItemName
+												numberOfLines={2}
+												ellipsizeMode="tail"
+											>{item.produto.PROD_NOME}</ItemName>
+											<ItemBrand>{item.produto.PROD_EAN}</ItemBrand>
+										</ItemContent>
+									</Item>
+								</ItemContainer>
+								);
+							}}/>
+						}
+				</Container>
 
 					{/* modal filter */}
 					<FilterButton onPress={() => setModalVisible(true)}>
@@ -319,8 +349,9 @@ const Products: React.FC = ({ route, navigation }) => {
 
 				<Modalize
 					ref={modalizeRef}
-					snapPoint={450}
+					snapPoint={550}
 					avoidKeyboardLikeIOS={true}
+					onClosed={() => setImage('')}
 				>
 						<ModalContainer
 							keyboardShouldPersistTaps="always"
@@ -370,6 +401,25 @@ const Products: React.FC = ({ route, navigation }) => {
 														/>
 												</ModalInput>
 
+												<ModalLabel style={{ marginTop: 14 }}>Foto do produto</ModalLabel>
+												<View style={styles.buttonProductPhoto}>
+													<Feather 
+														name="camera" 
+														size={24} 
+														color="#333" 
+														onPress={pickImage}
+													/>
+													<Image 
+														resizeMode="contain"
+														style={{
+															width: 50,
+															height: 50,
+															borderRadius: 10
+														}}
+														source={image !== '' ? { uri: image } : marketThumb} 
+													/>
+												</View>
+
 												<View style={styles.radioButton}>
 													<View style={styles.radioButtonContent}>
 														<Text style={styles.radioButtonText}>Normal</Text>
@@ -397,6 +447,7 @@ const Products: React.FC = ({ route, navigation }) => {
 												onPress={() => {
 														setBarcode('');
 														setProductName('');
+														setImage('')
 														onClose();
 												}}
 										>
@@ -475,6 +526,17 @@ const styles = StyleSheet.create({
 		borderRadius: 5,
 		alignItems: 'center',
 		justifyContent: 'center',
+	},
+
+	buttonProductPhoto: {
+		backgroundColor: "#EFEFEF",
+		paddingVertical: 10,
+		paddingHorizontal: 20,
+		borderRadius: 7,
+		alignItems: 'center',
+		justifyContent: 'space-between',
+		flexDirection: 'row',
+		
 	}
 });
 
