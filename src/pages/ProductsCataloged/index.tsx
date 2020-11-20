@@ -1,9 +1,12 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
-import { Alert, StatusBar, View, StyleSheet, Modal, Button, Text } from 'react-native';
+import { Alert, StatusBar, View, StyleSheet, Modal, Image, Text, Platform } from 'react-native';
 import AsyncStorage from '@react-native-community/async-storage';
 import { MaterialIcons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 import { Modalize } from 'react-native-modalize';
+import { RadioButton } from 'react-native-paper'
 import { TextInputMask } from 'react-native-masked-text'
+import * as ImagePicker from 'expo-image-picker';
+
 
 import api from '../../services/api';
 
@@ -54,6 +57,7 @@ const ProductsCataloged: React.FC = ({ route, navigation }) => {
 
 
 	// Estados dos inputs
+	const [id, setId] = useState(0)
 	const [barcode, setBarcode] = useState('');
 	const [productName, setProductName] = useState('');
 	const [productPrice, setProductPrice] = useState('');
@@ -66,53 +70,10 @@ const ProductsCataloged: React.FC = ({ route, navigation }) => {
 	const [productsCataloged, setProductsCataloged] = useState([]);
 
 	// modal filter
-	const [modalVisible, setModalVisible] = React.useState(false);
-	const [data, setData] = React.useState("")
-	const [type, setType] = React.useState("")
-	
-	// Código escaneado
-	
-	// Pesquisar do produto por código de barras
-	// const onCodeScanned = useCallback(async (type, data) => {
-	// 	setIsLoading(true)
-	// 	const token = await AsyncStorage.getItem('@Formosa:token')
+	const [checked, setChecked] = React.useState(0);
 
-	// 		try {
-	// 			setType(type)
-	// 			setData(data);
-				
-	// 			const response = await api.get(`/captura/barcode/${route.params.EMP_ID}/${data}`, {
-	// 				headers: {
-	// 					Authorization: `Bearer ${token}`
-	// 				}
-	// 			})
-
-	// 			const filterProductName = response.data.PROD_NOME
-	// 			Alert.alert(`Código de barras escaneado com sucesso!${"\n"}${data}`)
-	// 			if (productPrice === "0.00" || productPrice === "R$0,00") {
-	// 				Alert.alert('Error', 'preço não pode ser 0,00')
-	// 			}
-				
-	// 			onOpen()
-	// 			setBarcode(data)
-	// 			setProductName(filterProductName)
-	// 			setProductPrice('0,00')
-				
-	// 			// setModalVisible(false);
-				
-	// 			// setIsLoading(false)
-				
-	// 		} catch (error) {
-	// 			console.log(error)
-
-	// 			Alert.alert('Error', 'Produto não encontrado', [
-	// 				{text: 'OK', onPress: () => console.log('alert closed')}
-	// 			])
-				
-	// 		}
-	// 	setModalVisible(false);
-	// 	setIsLoading(false)
-	// }, [data])
+	// IMAGE 
+	const [image, setImage] = useState('')
 	
 
 	// Função de buscar produtos para catalogar
@@ -147,10 +108,11 @@ const ProductsCataloged: React.FC = ({ route, navigation }) => {
 			} else {
 					try {
 							const token = await AsyncStorage.getItem('@Formosa:token');
-							const response = await api.post(`/captura/registrar`, {
-									EAN: barcode,
+							const response = await api.post(`/captura/atualizar`, {
+									CAT_ID: id,
 									CAT_PRECO: productPrice,
-									EMP_ID: route.params.EMP_ID
+									CAT_SITUACAO: checked,
+									CAT_IMG: image
 							}, {
 									headers: {
 											Authorization: `Bearer ${token}`
@@ -161,11 +123,37 @@ const ProductsCataloged: React.FC = ({ route, navigation }) => {
 							getData();
 					} catch (err) {
 							console.log(err)
+							console.log()
 					}
 					onClose();
 			}
 	}
 
+	const pickImage = useCallback(async () => {
+    if (Platform.OS !== 'web') {
+      const { status } = await ImagePicker.requestCameraRollPermissionsAsync();
+      if (status !== 'granted') {
+        alert('Sorry, we need camera roll permissions to make this work!');
+      }
+    }
+
+    const result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      allowsEditing: true,
+      aspect: [4, 3],
+			quality: 0,
+			base64: true,
+		});
+
+    if (!result.cancelled) {
+			const localUrl = result.base64
+			
+			setImage(localUrl);
+		}
+				
+	}, [setImage])
+
+	console.log(id)
 
 	useEffect(() => {
 		getData();
@@ -206,9 +194,12 @@ const ProductsCataloged: React.FC = ({ route, navigation }) => {
 														key={item.produto.id}
 														onPress={() => {
 																onOpen();
+																setId(item.id)
 																setProductName(item.produto.PROD_NOME);
 																setBarcode(`${item.produto.PROD_EAN}`);
 																setProductPrice(item.CAT_PRECO);
+																setChecked(item.CAT_SITUACAO)
+																setImage(item.CAT_IMG)
 														}}
 													>
 														<ItemThumbnail
@@ -229,28 +220,14 @@ const ProductsCataloged: React.FC = ({ route, navigation }) => {
 								}
 					</Container>
 
-					{/* modal filter */}
-					{/* <FilterButton onPress={() => setModalVisible(true)}>
-							<Feather name="camera" size={24} color="#fff" />
-					</FilterButton>
-
-					<Modal
-						visible={modalVisible}
-						transparent={true}
-						animationType="fade"
-						onRequestClose={() => setModalVisible(false)}
-					>
-						<View style={styles.modal}>
-							<Scanner onCodeScanned={onCodeScanned} />
-							<Button title="Cancelar" onPress={() => setModalVisible(false)} />
-						</View>
-					</Modal> */}
-				{/* Modal adicionar produto */}
-
 				<Modalize
 					ref={modalizeRef}
-					snapPoint={400}
+					snapPoint={550}
 					avoidKeyboardLikeIOS={true}
+					onClosed={() => {
+						setImage('')
+						setId(0)
+					}}
 				>
 						<ModalContainer
 							keyboardShouldPersistTaps="always"
@@ -262,6 +239,7 @@ const ProductsCataloged: React.FC = ({ route, navigation }) => {
 												<ModalTextInput
 														textAlign='center'
 														value={barcode}
+														editable={false}
 														onChangeText={value => setBarcode(value)}
 												/>
 												
@@ -299,6 +277,44 @@ const ProductsCataloged: React.FC = ({ route, navigation }) => {
 																onChangeText={value => setProductPrice(value)}
 														/>
 												</ModalInput>
+
+												<ModalLabel style={{ marginTop: 14 }}>Foto do produto</ModalLabel>
+												<View style={styles.buttonProductPhoto}>
+													<Feather 
+														name="camera" 
+														size={24} 
+														color="#333" 
+														onPress={pickImage}
+													/>
+													<Image 
+														resizeMode="contain"
+														style={{
+															width: 50,
+															height: 50,
+															borderRadius: 10
+														}}
+														source={image !== '' ? { uri: `data:image/jpeg;base64,${image}` } : marketThumb} 
+													/>
+												</View>
+
+												<View style={styles.radioButton}>
+													<View style={styles.radioButtonContent}>
+														<Text style={styles.radioButtonText}>Normal</Text>
+														<RadioButton
+															value="0"
+															status={ checked === 0 ? 'checked' : 'unchecked' }
+															onPress={() => setChecked(0)}
+														/>
+													</View>
+													<View style={{...styles.radioButtonContent, marginLeft: 15}}>
+														<Text style={styles.radioButtonText}>Promoção</Text>
+														<RadioButton
+															value="1"
+															status={ checked === 1 ? 'checked' : 'unchecked' }
+															onPress={() => setChecked(1)}
+														/>
+													</View>
+												</View>
 										</ModalInputContainer>
 										
 								</ModalGroup>
@@ -308,6 +324,8 @@ const ProductsCataloged: React.FC = ({ route, navigation }) => {
 												onPress={() => {
 														setBarcode('');
 														setProductName('');
+														setImage('')
+														setId(0)
 														onClose();
 												}}
 										>
@@ -339,6 +357,65 @@ const styles = StyleSheet.create({
 		color: '#8e8e8e',
 		textAlign: 'left',
 		marginLeft: 5,
+	},
+
+	radioButton: {
+		paddingHorizontal: 5,
+		alignItems: 'center',
+		justifyContent: 'space-between',
+		flexDirection: 'row', 
+		marginTop: 5,
+		marginBottom: 5
+	},
+	radioButtonContent: {
+		alignItems: 'center',
+		paddingTop: 5,
+		borderRadius: 10,
+	},
+	radioButtonText: {
+		fontFamily: 'Poppins_400Regular'
+	},
+	buttonDoneContainer: {
+		position: 'absolute',
+		bottom: "5%",
+		left: "10%",
+		backgroundColor: '#DE5F5F',
+		padding: 10,
+		borderRadius: 8
+	},
+	modalDoneContent: {
+		alignItems: 'center',
+		justifyContent: 'center',
+		padding: 10,
+		height: "30%",
+	},
+	buttonDone: {
+		width: 70,
+		height: 30,
+		backgroundColor: '#51cc82',
+		borderRadius: 5,
+		alignItems: 'center',
+		justifyContent: 'center',
+		marginRight: 50,
+	},
+	buttonCancelDone: {
+		width: 70,
+		height: 30,
+		backgroundColor: '#d35e5e',
+		borderRadius: 5,
+		alignItems: 'center',
+		justifyContent: 'center',
+	},
+
+	buttonProductPhoto: {
+		backgroundColor: "#EFEFEF",
+		paddingVertical: 10,
+		paddingHorizontal: 20,
+		borderRadius: 7,
+		alignItems: 'center',
+		justifyContent: 'space-between',
+		flexDirection: 'row',
+		
 	}
 });
 

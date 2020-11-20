@@ -74,7 +74,7 @@ const Products: React.FC = ({ route, navigation }) => {
 
 
 	// image
-	const [image, setImage] = useState('');
+	const [image, setImage] = useState('')
 
 	// modal filter
 	const [modalVisible, setModalVisible] = React.useState(false);
@@ -164,14 +164,15 @@ const Products: React.FC = ({ route, navigation }) => {
 									EAN: barcode,
 									CAT_PRECO: productPrice,
 									EMP_ID: route.params.EMP_ID,
-									CAT_SITUACAO: checked
+									CAT_SITUACAO: checked,
+									CAT_IMG: image
 							}, {
 									headers: {
 											Authorization: `Bearer ${token}`
 									}
 							})
 
-							console.log(response);
+							console.log(response.config.url);
 							getData();
 					} catch (err) {
 							console.log(err)
@@ -209,19 +210,20 @@ const Products: React.FC = ({ route, navigation }) => {
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [4, 3],
-      quality: 1,
-    });
+			quality: 0,
+			base64: true,
+		});
 
     if (!result.cancelled) {
-      const localUrl = result.uri
-
-      setImage(localUrl);
-    }
-  }, [setImage])
+			const localUrl = result.base64
+			
+			setImage(localUrl);
+		}
+				
+	}, [setImage])
 
 	console.log(image)
-
-
+	
 	useEffect(() => {
 		getData();
 	}, [])	
@@ -416,7 +418,7 @@ const Products: React.FC = ({ route, navigation }) => {
 															height: 50,
 															borderRadius: 10
 														}}
-														source={image !== '' ? { uri: image } : marketThumb} 
+														source={image !== '' ? { uri: `data:image/jpeg;base64,${image}` } : marketThumb} 
 													/>
 												</View>
 
@@ -447,8 +449,8 @@ const Products: React.FC = ({ route, navigation }) => {
 												onPress={() => {
 														setBarcode('');
 														setProductName('');
-														setImage('')
 														onClose();
+														setImage('')
 												}}
 										>
 										<ModalButtonText>Cancelar</ModalButtonText>

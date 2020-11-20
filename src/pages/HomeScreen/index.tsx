@@ -11,8 +11,6 @@ import {
 
 import { StatusBar, KeyboardAvoidingView, Platform, Keyboard, TouchableWithoutFeedback, Alert } from 'react-native';
 
-import { useNavigation } from '@react-navigation/native';
-
 import { MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 
 import { AuthContext } from '../../contexts/auth';
@@ -65,9 +63,9 @@ const HomeScreen: React.FC = () => {
 												}
 										<Form>
 												<Input>
-														<Feather name="mail" size={24} color="#DE5F5F" />
+														<Feather name="user" size={24} color="#DE5F5F" />
 														<TextInput 
-																placeholder='E-mail' 
+																placeholder='Usuário' 
 																placeholderTextColor='#565651'
 																value={email}
 																onChangeText={value => setEmail(value)}

@@ -26,10 +26,6 @@
       "supportsTablet": true
     },
     "android": {
-      "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#DE5F5F"
-      },
       "useNextNotificationsApi": true,
       "googleServicesFile": "./google-services.json",
       "package": "com.luccaroli.capturadeprecos"
