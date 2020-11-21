@@ -42,8 +42,6 @@ const EstablishmentSelect: React.FC = ({ navigation }) => {
   const notificationListener = useRef();
   const responseListener = useRef();
 
-  console.log(expoPushToken)
-
   useEffect(() => {
     registerForPushNotificationsAsync().then(token => setExpoPushToken(token));
 

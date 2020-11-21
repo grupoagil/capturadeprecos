@@ -1,5 +1,5 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
-import { Alert, StatusBar, View, StyleSheet, Modal, Image, Text, Platform } from 'react-native';
+import { Alert, StatusBar, View, StyleSheet, Image, Text, Platform } from 'react-native';
 import AsyncStorage from '@react-native-community/async-storage';
 import { MaterialIcons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 import { Modalize } from 'react-native-modalize';
@@ -11,8 +11,6 @@ import * as ImagePicker from 'expo-image-picker';
 import api from '../../services/api';
 
 import Loading from '../../components/Loading';
-import Scanner from '../../components/Scanner'
-import BoxEmpty from '../../components/BoxEmpty'
 
 import marketThumb from '../../assets/images/marketThumb.png';
 
@@ -74,6 +72,7 @@ const ProductsCataloged: React.FC = ({ route, navigation }) => {
 
 	// IMAGE 
 	const [image, setImage] = useState('')
+	const [baseImage, setBaseImage] = useState('')
 	
 
 	// Função de buscar produtos para catalogar
@@ -107,23 +106,22 @@ const ProductsCataloged: React.FC = ({ route, navigation }) => {
 				Alert.alert('Error', 'O preço não pode ser R$0,00')
 			} else {
 					try {
+							setIsLoading(true)
 							const token = await AsyncStorage.getItem('@Formosa:token');
-							const response = await api.post(`/captura/atualizar`, {
+							await api.post(`/captura/atualizar`, {
 									CAT_ID: id,
 									CAT_PRECO: productPrice,
 									CAT_SITUACAO: checked,
-									CAT_IMG: image
+									CAT_IMG: baseImage
 							}, {
 									headers: {
 											Authorization: `Bearer ${token}`
 									}
 							})
 
-							console.log(response.data);
 							getData();
 					} catch (err) {
 							console.log(err)
-							console.log()
 					}
 					onClose();
 			}
@@ -146,14 +144,14 @@ const ProductsCataloged: React.FC = ({ route, navigation }) => {
 		});
 
     if (!result.cancelled) {
-			const localUrl = result.base64
-			
+			const localUrl = result.uri
+			const base = result.base64
+
+			setBaseImage(base)
 			setImage(localUrl);
 		}
 				
 	}, [setImage])
-
-	console.log(id)
 
 	useEffect(() => {
 		getData();
@@ -199,7 +197,7 @@ const ProductsCataloged: React.FC = ({ route, navigation }) => {
 																setBarcode(`${item.produto.PROD_EAN}`);
 																setProductPrice(item.CAT_PRECO);
 																setChecked(item.CAT_SITUACAO)
-																setImage(item.CAT_IMG)
+																setImage(`data:image/jpeg;base64,${item.CAT_IMG}`)
 														}}
 													>
 														<ItemThumbnail
@@ -229,6 +227,8 @@ const ProductsCataloged: React.FC = ({ route, navigation }) => {
 						setId(0)
 					}}
 				>
+					{isLoading === true ? <Loading /> : (
+
 						<ModalContainer
 							keyboardShouldPersistTaps="always"
 						>
@@ -293,7 +293,7 @@ const ProductsCataloged: React.FC = ({ route, navigation }) => {
 															height: 50,
 															borderRadius: 10
 														}}
-														source={image !== '' ? { uri: `data:image/jpeg;base64,${image}` } : marketThumb} 
+														source={image !== '' ? { uri: image } : marketThumb} 
 													/>
 												</View>
 
@@ -339,6 +339,8 @@ const ProductsCataloged: React.FC = ({ route, navigation }) => {
 										</ModalButton>
 								</ModalGroup>
 						</ModalContainer>
+					)}
+
 				</Modalize>
 			</>
 	)

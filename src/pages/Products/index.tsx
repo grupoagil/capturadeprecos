@@ -75,6 +75,7 @@ const Products: React.FC = ({ route, navigation }) => {
 
 	// image
 	const [image, setImage] = useState('')
+	const [baseImage, setBaseImage] = useState('')
 
 	// modal filter
 	const [modalVisible, setModalVisible] = React.useState(false);
@@ -109,10 +110,6 @@ const Products: React.FC = ({ route, navigation }) => {
 				setBarcode(data)
 				setProductName(filterProductName)
 				setProductPrice('R$0,00')
-				
-				// setModalVisible(false);
-				
-				// setIsLoading(false)
 				
 			} catch (error) {
 				console.log(error)
@@ -159,20 +156,20 @@ const Products: React.FC = ({ route, navigation }) => {
 				Alert.alert('Error', 'O preço não pode ser R$0,00')
 			} else {
 					try {
+							setIsLoading(true)
 							const token = await AsyncStorage.getItem('@Formosa:token');
-							const response = await api.post(`/captura/registrar`, {
+							await api.post(`/captura/registrar`, {
 									EAN: barcode,
 									CAT_PRECO: productPrice,
 									EMP_ID: route.params.EMP_ID,
 									CAT_SITUACAO: checked,
-									CAT_IMG: image
+									CAT_IMG: baseImage,
 							}, {
 									headers: {
 											Authorization: `Bearer ${token}`
 									}
 							})
 
-							console.log(response.config.url);
 							getData();
 					} catch (err) {
 							console.log(err)
@@ -184,7 +181,7 @@ const Products: React.FC = ({ route, navigation }) => {
 
 	const handleEndSearch = useCallback(async() => {
 		const token = await AsyncStorage.getItem('@Formosa:token');
-		const response = await api.post('/captura/concluir', {
+		await api.post('/captura/concluir', {
 				EMP_ID: route.params.EMP_ID
 			}, {
 				headers: {
@@ -193,7 +190,6 @@ const Products: React.FC = ({ route, navigation }) => {
 			}
 		)
 
-		console.log(response.data)
 		setModalDoneVisible(false)
 		getData()
 	}, [])
@@ -215,14 +211,14 @@ const Products: React.FC = ({ route, navigation }) => {
 		});
 
     if (!result.cancelled) {
-			const localUrl = result.base64
+			const localUrl = result.uri
+			const base = result.base64
 			
+			setBaseImage(base)
 			setImage(localUrl);
 		}
 				
 	}, [setImage])
-
-	console.log(image)
 	
 	useEffect(() => {
 		getData();
@@ -355,6 +351,8 @@ const Products: React.FC = ({ route, navigation }) => {
 					avoidKeyboardLikeIOS={true}
 					onClosed={() => setImage('')}
 				>
+					{isLoading === true ? <Loading /> : (
+
 						<ModalContainer
 							keyboardShouldPersistTaps="always"
 						>
@@ -418,7 +416,7 @@ const Products: React.FC = ({ route, navigation }) => {
 															height: 50,
 															borderRadius: 10
 														}}
-														source={image !== '' ? { uri: `data:image/jpeg;base64,${image}` } : marketThumb} 
+														source={image !== '' ? { uri: image } : marketThumb} 
 													/>
 												</View>
 
@@ -463,6 +461,8 @@ const Products: React.FC = ({ route, navigation }) => {
 										</ModalButton>
 								</ModalGroup>
 						</ModalContainer>
+					)}
+
 				</Modalize>
 			</>
 	)
