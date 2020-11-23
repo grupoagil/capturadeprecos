@@ -198,7 +198,7 @@ const EstablishmentSelect: React.FC = ({ navigation }) => {
 									<Loading />
 									:
 									<Content>
-										<Title>Estabelecimentos para pesquisar</Title>
+										<Title>A pesquisar</Title>
 										<List
 											contentContainerStyle={{
 													paddingHorizontal: 20

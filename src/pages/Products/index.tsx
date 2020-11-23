@@ -1,10 +1,10 @@
 import React, { useRef, useState, useEffect, useCallback } from 'react';
-import { Alert, StatusBar, View, StyleSheet, Modal, Button, Text, Platform, Image } from 'react-native';
+import { Alert, StatusBar, View, StyleSheet, Modal, Button, Text, Platform, Image, Animated, TouchableWithoutFeedback } from 'react-native';
 import AsyncStorage from '@react-native-community/async-storage';
-import { MaterialIcons, MaterialCommunityIcons, Feather, Ionicons } from '@expo/vector-icons';
+import { MaterialIcons, MaterialCommunityIcons, Feather, Ionicons, FontAwesome } from '@expo/vector-icons';
 import { Modalize } from 'react-native-modalize';
 import { TextInputMask } from 'react-native-masked-text'
-import { RadioButton, Modal as ModalDone } from 'react-native-paper'
+import { RadioButton, Modal as ModalDone, TextInput, DefaultTheme } from 'react-native-paper'
 import { RectButton } from 'react-native-gesture-handler';
 import * as ImagePicker from 'expo-image-picker';
 
@@ -61,9 +61,61 @@ const Products: React.FC = ({ route, navigation }) => {
 	const [barcode, setBarcode] = useState('');
 	const [productName, setProductName] = useState('');
 	const [productPrice, setProductPrice] = useState('');
+
 	// radio button
 	const [checked, setChecked] = React.useState('0');
 
+	// FAB BUTTON
+	const [open, setOpen] = useState(false)
+	const [animation] = useState(new Animated.Value(0))
+	
+	const toggleMenu = () => {
+    var toValue = open ? 0 : 1
+
+    Animated.spring(animation, {
+      toValue: toValue,
+			friction: 5,
+			useNativeDriver: true
+    }).start()
+
+    setOpen(!open)
+  }
+
+  const rotation = {
+    transform: [
+      {
+        rotate: animation.interpolate({
+          inputRange: [0, 1],
+          outputRange: ["0deg", "45deg"]
+        })
+      }
+    ]
+  }
+
+  const homeStyle = {
+    transform: [
+      { scale: animation },
+      {
+        translateY: animation.interpolate({
+          inputRange: [0, 1],
+          outputRange: [0, -50]
+        })
+      }
+    ]
+  }
+
+  const heartStyle = {
+    transform: [
+      { scale: animation },
+      {
+        translateY: animation.interpolate({
+          inputRange: [0, 1],
+          outputRange: [0, -100]
+        })
+      }
+    ]
+  }
+	
 
 	// Estados de atividade
 	const [isLoading, setIsLoading] = useState(false);
@@ -80,12 +132,55 @@ const Products: React.FC = ({ route, navigation }) => {
 	// modal filter
 	const [modalVisible, setModalVisible] = React.useState(false);
 	const [modalDoneVisible, setModalDoneVisible] = React.useState(false);
+	const [modalCodeWrite, setModalCodeWrite] = useState(false)
 	const [data, setData] = React.useState("")
 	const [type, setType] = React.useState("")
 	
-	// Código escaneado
+	// pesquisar produto Pesquisar do produto por código de barras (digitado)
+	const [barcodeText, setBarcodeText] = useState('')
+	const theme = {
+		...DefaultTheme,
+		roundness: 2,
+		colors: {
+			...DefaultTheme.colors,
+			primary: '#d35e5e',
+		},
+	};
+
+	const onCodeText = useCallback(async () => {
+		setIsLoading(true)
+		const token = await AsyncStorage.getItem('@Formosa:token')
+		
+		try {
+			const response = await api.get(`/captura/barcode/${route.params.EMP_ID}/${barcodeText}`, {
+				headers: {
+					Authorization: `Bearer ${token}`
+				}
+			})
+
+			const filterProductName = response.data.PROD_NOME
+				
+				onOpen()
+				setBarcode(barcodeText)
+				setProductName(filterProductName)
+				setProductPrice('R$0,00')
+				setIsLoading(false)
+
+		} catch (error) {
+			console.log(error)
+
+				Alert.alert('Error', 'Produto não encontrado', [
+					{text: 'OK', onPress: () => console.log('alert closed')}
+				])
+		}
+		
+		setModalCodeWrite(false)
+		setBarcodeText('')
+		setIsLoading(false)
+	}, [barcodeText])
+
 	
-	// Pesquisar do produto por código de barras
+	// Pesquisar do produto por código de barras (camera)
 	const onCodeScanned = useCallback(async (type, data) => {
 		setIsLoading(true)
 		const token = await AsyncStorage.getItem('@Formosa:token')
@@ -287,9 +382,39 @@ const Products: React.FC = ({ route, navigation }) => {
 				</Container>
 
 					{/* modal filter */}
-					<FilterButton onPress={() => setModalVisible(true)}>
-							<Feather name="camera" size={24} color="#fff" />
-					</FilterButton>
+
+					<View style={styles.container}>
+						<TouchableWithoutFeedback onPress={() => setModalVisible(true)}>
+							<Animated.View style={[styles.button, styles.subMenu, heartStyle]}>
+								<Feather
+									name="camera" 
+									size={18} 
+									color="#FFF"
+								/>
+							</Animated.View>        
+						</TouchableWithoutFeedback>
+						<TouchableWithoutFeedback onPress={() => setModalCodeWrite(true)}>
+							<Animated.View style={[styles.button, styles.subMenu, homeStyle]}>
+								<MaterialIcons
+									name="touch-app" 
+									size={18} 
+									color="#FFF"
+								/>
+							</Animated.View>        
+						</TouchableWithoutFeedback>
+						<TouchableWithoutFeedback onPress={toggleMenu}>
+							<Animated.View style={[styles.button, styles.menu]}>
+								<Animated.View style={[rotation]}>
+									<Feather
+										name="plus" 
+										size={20} 
+										color="#FFF"
+									/>
+								</Animated.View>
+							</Animated.View>        
+						</TouchableWithoutFeedback>
+					</View>
+					
 					
 					<RectButton style={styles.buttonDoneContainer} onPress={() => setModalDoneVisible(true)}>
 						<Ionicons name="md-done-all" size={24} color="#fff" />
@@ -335,7 +460,7 @@ const Products: React.FC = ({ route, navigation }) => {
 					<Modal
 						visible={modalVisible}
 						transparent={true}
-						animationType="fade"
+						animationType="slide"
 						onRequestClose={() => setModalVisible(false)}
 					>
 						<View style={styles.modal}>
@@ -343,6 +468,50 @@ const Products: React.FC = ({ route, navigation }) => {
 							<Button title="Cancelar" onPress={() => setModalVisible(false)} />
 						</View>
 					</Modal>
+
+					<ModalDone
+						visible={modalCodeWrite}
+						contentContainerStyle={{ backgroundColor: '#fff', padding: 20, margin: 20, borderRadius: 8 }}
+						onDismiss={() => setModalCodeWrite(false)}
+					>
+							<TextInput 
+								returnKeyType="done"
+								keyboardType="number-pad"
+								theme={theme}
+								label="Digite o codigo de barras"
+								value={barcodeText}
+								onChangeText={barcodeText => (setBarcodeText(barcodeText))}
+							/>
+
+							<View style={styles.modalDoneContent}>
+								<View style={{flexDirection: 'row', alignItems: 'center', marginTop: 20}}>
+									<RectButton 
+									onPress={onCodeText}
+									style={{...styles.buttonDone, width: 100}}>
+										<Text 
+											style={{ fontFamily: 'Poppins_600SemiBold', color: '#f5f4f4' }}
+										>
+											Pesquisar
+										</Text>
+									</RectButton>
+
+									<RectButton 
+									style={{...styles.buttonCancelDone, width: 100}}
+									onPress={() => {
+										setBarcodeText('')
+										setModalCodeWrite(false)
+									}}
+									>
+										<Text
+											style={{ fontFamily: 'Poppins_600SemiBold', color: '#f5f4f4' }}
+										>
+											Cancelar
+										</Text>
+									</RectButton>
+								</View>
+							</View>
+							
+					</ModalDone>
 				{/* Modal adicionar produto */}
 
 				<Modalize
@@ -538,7 +707,30 @@ const styles = StyleSheet.create({
 		alignItems: 'center',
 		justifyContent: 'space-between',
 		flexDirection: 'row',
-		
+	},
+
+	container: {
+		position: 'absolute',
+		bottom: "11.8%",
+		right: "15.8%",
+		alignItems: 'center'
+},
+	button: {
+		position: 'absolute',
+		width: 47,
+		height: 47,
+		borderRadius: 8,
+		backgroundColor: '#d35e5e',
+		justifyContent: 'center',
+		alignItems: 'center'
+	},
+	menu: {
+		backgroundColor: '#d35e5e',
+	},
+	subMenu: {
+		width: 40,
+		height: 40,
+		borderRadius: 8,
 	}
 });
 
