@@ -220,7 +220,7 @@ const ProductsCataloged: React.FC = ({ route, navigation }) => {
 
 				<Modalize
 					ref={modalizeRef}
-					snapPoint={550}
+					snapPoint={650}
 					avoidKeyboardLikeIOS={true}
 					onClosed={() => {
 						setImage('')

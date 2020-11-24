@@ -98,9 +98,9 @@ const Products: React.FC = ({ route, navigation }) => {
       {
         translateY: animation.interpolate({
           inputRange: [0, 1],
-          outputRange: [0, -50]
+          outputRange: [0, -10]
         })
-      }
+			},
     ]
   }
 
@@ -110,7 +110,8 @@ const Products: React.FC = ({ route, navigation }) => {
       {
         translateY: animation.interpolate({
           inputRange: [0, 1],
-          outputRange: [0, -100]
+					outputRange: [0, -20],
+					
         })
       }
     ]
@@ -384,41 +385,43 @@ const Products: React.FC = ({ route, navigation }) => {
 					{/* modal filter */}
 
 					<View style={styles.container}>
-						<TouchableWithoutFeedback onPress={() => setModalVisible(true)}>
+
+						<RectButton style={styles.buttonDoneContainer} onPress={() => setModalDoneVisible(true)}>
+							<Ionicons name="md-done-all" size={24} color="#fff" />
+						</RectButton>
+
+						<View style={{ height: 50, bottom: 92.3 }}>
 							<Animated.View style={[styles.button, styles.subMenu, heartStyle]}>
 								<Feather
+									onPress={() => setModalVisible(true)}
 									name="camera" 
 									size={18} 
 									color="#FFF"
 								/>
 							</Animated.View>        
-						</TouchableWithoutFeedback>
-						<TouchableWithoutFeedback onPress={() => setModalCodeWrite(true)}>
 							<Animated.View style={[styles.button, styles.subMenu, homeStyle]}>
 								<MaterialIcons
+									onPress={() => setModalCodeWrite(true)}
 									name="touch-app" 
 									size={18} 
 									color="#FFF"
 								/>
 							</Animated.View>        
-						</TouchableWithoutFeedback>
 						<TouchableWithoutFeedback onPress={toggleMenu}>
 							<Animated.View style={[styles.button, styles.menu]}>
 								<Animated.View style={[rotation]}>
 									<Feather
 										name="plus" 
-										size={20} 
+										size={26} 
 										color="#FFF"
 									/>
 								</Animated.View>
 							</Animated.View>        
 						</TouchableWithoutFeedback>
+						</View>
 					</View>
 					
 					
-					<RectButton style={styles.buttonDoneContainer} onPress={() => setModalDoneVisible(true)}>
-						<Ionicons name="md-done-all" size={24} color="#fff" />
-					</RectButton>
 
 					<ModalDone
 						contentContainerStyle={{ backgroundColor: '#fff', padding: 20, margin: 20 }}
@@ -469,6 +472,8 @@ const Products: React.FC = ({ route, navigation }) => {
 						</View>
 					</Modal>
 
+					{isLoading === true ? <Loading /> : (
+
 					<ModalDone
 						visible={modalCodeWrite}
 						contentContainerStyle={{ backgroundColor: '#fff', padding: 20, margin: 20, borderRadius: 8 }}
@@ -512,11 +517,12 @@ const Products: React.FC = ({ route, navigation }) => {
 							</View>
 							
 					</ModalDone>
+					)}
 				{/* Modal adicionar produto */}
 
 				<Modalize
 					ref={modalizeRef}
-					snapPoint={550}
+					snapPoint={650}
 					avoidKeyboardLikeIOS={true}
 					onClosed={() => setImage('')}
 				>
@@ -668,9 +674,9 @@ const styles = StyleSheet.create({
 		fontFamily: 'Poppins_400Regular'
 	},
 	buttonDoneContainer: {
-		position: 'absolute',
-		bottom: "5%",
-		left: "10%",
+		// position: 'absolute',
+		// bottom: "5%",
+		// left: "10%",
 		backgroundColor: '#DE5F5F',
 		padding: 10,
 		borderRadius: 8
@@ -711,14 +717,17 @@ const styles = StyleSheet.create({
 
 	container: {
 		position: 'absolute',
-		bottom: "11.8%",
-		right: "15.8%",
-		alignItems: 'center'
+		width: '100%',
+		bottom: 50,
+		// right: "15.8%",
+		flexDirection: 'row',
+		alignItems: 'center',
+		justifyContent: 'space-between',
+		paddingHorizontal: 16
 },
 	button: {
-		position: 'absolute',
-		width: 47,
-		height: 47,
+		// position: 'absolute',
+		padding: 10,
 		borderRadius: 8,
 		backgroundColor: '#d35e5e',
 		justifyContent: 'center',
@@ -728,9 +737,9 @@ const styles = StyleSheet.create({
 		backgroundColor: '#d35e5e',
 	},
 	subMenu: {
-		width: 40,
-		height: 40,
-		borderRadius: 8,
+		width: 47,
+		height: 47,
+		borderRadius: 47 / 2,
 	}
 });
 
