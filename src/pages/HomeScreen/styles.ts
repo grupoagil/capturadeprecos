@@ -70,3 +70,10 @@ export const ButtonText = styled.Text `
 	font-size: 18px;
 	margin-left: 5px;
 `;
+
+export const Logo = styled.Image`
+	width: 100px;
+	height: 100px;
+	border-radius: 50px;
+	margin-bottom: -10px;
+`

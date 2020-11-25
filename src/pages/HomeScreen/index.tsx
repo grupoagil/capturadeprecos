@@ -6,7 +6,8 @@ import {
 	Input,
 	TextInput,
 	Button,
-	ButtonText
+	ButtonText,
+	Logo
 } from './styles';
 
 import { StatusBar, KeyboardAvoidingView, Platform, Keyboard, TouchableWithoutFeedback, Alert } from 'react-native';
@@ -16,6 +17,7 @@ import { MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 import { AuthContext } from '../../contexts/auth';
 
 import Loading from '../../components/Loading';
+import logoImg from '../../assets/images/logo.png'
 
 const HomeScreen: React.FC = () => {
 	const [isLoading, setIsLoading] = useState(false);
@@ -54,6 +56,7 @@ const HomeScreen: React.FC = () => {
 								onPress={() => Keyboard.dismiss()}
 						>
 								<Container>
+										<Logo source={logoImg} resizeMode="contain" />
 										<Title>Pesquisa de Preços</Title>
 												{
 														isLoading === true ?
