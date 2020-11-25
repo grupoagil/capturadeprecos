@@ -219,7 +219,7 @@ const EstablishmentSelect: React.FC = ({ navigation }) => {
 												return (
 													<Card
 														onPress={() => {
-															navigation.navigate('Products', {
+															navigation.navigate('Session', {
 																	EMP_ID: item.id,
 																	EMP_THUMB: item.EMP_LOGO,
 																	EMP_NAME: item.EMP_NOME.trim()
@@ -261,7 +261,7 @@ const EstablishmentSelect: React.FC = ({ navigation }) => {
 												return (
 													<Card
 														onPress={() => {
-															navigation.navigate('ProductsCataloged', {
+															navigation.navigate('SessionCataloged', {
 																	EMP_ID: item.id,
 																	EMP_THUMB: item.EMP_LOGO,
 																	EMP_NAME: item.EMP_NOME.trim()

@@ -72,7 +72,6 @@ const ProductsCataloged: React.FC = ({ route, navigation }) => {
 
 	// IMAGE 
 	const [image, setImage] = useState('')
-	const [baseImage, setBaseImage] = useState('')
 	
 
 	// Função de buscar produtos para catalogar
@@ -81,7 +80,7 @@ const ProductsCataloged: React.FC = ({ route, navigation }) => {
 			try {
 					const token = await AsyncStorage.getItem('@Formosa:token');
 
-					const response = await api.get(`/captura/catalogados/empresas/${route.params.EMP_ID}/produtos`, {
+					const response = await api.get(`/captura/catalogados/empresas/${route.params.EMP_ID}/secoes/${route.params.SESSION}/produtos`, {
 							headers: {
 									Authorization: `Bearer ${token}`
 							}
@@ -108,13 +107,21 @@ const ProductsCataloged: React.FC = ({ route, navigation }) => {
 					try {
 							setIsLoading(true)
 							const token = await AsyncStorage.getItem('@Formosa:token');
-							await api.post(`/captura/atualizar`, {
-									CAT_ID: id,
-									CAT_PRECO: productPrice,
-									CAT_SITUACAO: checked,
-									CAT_IMG: baseImage
-							}, {
+							
+							const data = new FormData()
+
+							data.append('CAT_ID', String(id))
+							data.append('CAT_PRECO', productPrice)
+							data.append('CAT_SITUACAO', String(checked))
+							data.append('CAT_IMG', { 
+								name: `image_${barcode}.jpg`,
+								type: 'image/jpg',
+								uri: image
+							 } as any)
+
+							await api.post(`/captura/atualizar`, data, {
 									headers: {
+										'Content-Type': 'multipart/form-data',
 											Authorization: `Bearer ${token}`
 									}
 							})
@@ -139,15 +146,12 @@ const ProductsCataloged: React.FC = ({ route, navigation }) => {
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [4, 3],
-			quality: 0,
-			base64: true,
+			quality: 0.4,
 		});
 
     if (!result.cancelled) {
 			const localUrl = result.uri
-			const base = result.base64
 
-			setBaseImage(base)
 			setImage(localUrl);
 		}
 				
@@ -197,7 +201,7 @@ const ProductsCataloged: React.FC = ({ route, navigation }) => {
 																setBarcode(`${item.produto.PROD_EAN}`);
 																setProductPrice(item.CAT_PRECO);
 																setChecked(item.CAT_SITUACAO)
-																setImage(`data:image/jpeg;base64,${item.CAT_IMG}`)
+																setImage(`http://167.249.210.93:9406/${item.CAT_IMG}`)
 														}}
 													>
 														<ItemThumbnail

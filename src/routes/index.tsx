@@ -4,8 +4,10 @@ import { createStackNavigator } from '@react-navigation/stack';
 
 import HomeScreen from '../pages/HomeScreen';
 import EstablishmentSelect from '../pages/EstablishmentSelect';
-import ProductsCataloged from '../pages/ProductsCataloged';
+import Session from '../pages/Session';
+import SessionCataloged from '../pages/SessionCataloged';
 import Products from '../pages/Products/';
+import ProductsCataloged from '../pages/ProductsCataloged';
 
 import { AuthContext } from '../contexts/auth';
 
@@ -31,6 +33,8 @@ const Routes: React.FC = () => {
           !!user ?
           <>
             <Stack.Screen name="EstablishmentSelect" component={EstablishmentSelect} />
+            <Stack.Screen name="Session" component={Session} />
+            <Stack.Screen name="SessionCataloged" component={SessionCataloged} />
             <Stack.Screen name="Products" component={Products} />
             <Stack.Screen name="ProductsCataloged" component={ProductsCataloged} />
           </>

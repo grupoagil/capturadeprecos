@@ -8,7 +8,6 @@ import { RadioButton, Modal as ModalDone, TextInput, DefaultTheme } from 'react-
 import { RectButton } from 'react-native-gesture-handler';
 import * as ImagePicker from 'expo-image-picker';
 
-
 import api from '../../services/api';
 
 import Loading from '../../components/Loading';
@@ -226,12 +225,11 @@ const Products: React.FC = ({ route, navigation }) => {
 			try {
 					const token = await AsyncStorage.getItem('@Formosa:token');
 
-					const response = await api.get(`/captura/empresas/${route.params.EMP_ID}/produtos`, {
+					const response = await api.get(`/captura/empresas/${route.params.EMP_ID}/secoes/${route.params.SESSION}/produtos`, {
 							headers: {
 									Authorization: `Bearer ${token}`
 							}
 					});
-					
 					
 					setProducts(response.data);
 					setIsLoading(false);
@@ -243,7 +241,6 @@ const Products: React.FC = ({ route, navigation }) => {
 	}
 
 	// Função de enviar produto ao banco de dados = catalogar produto;
-	
 	async function handleSubmit() {
 
 			if (!productPrice || !barcode || !productName) {
@@ -254,15 +251,23 @@ const Products: React.FC = ({ route, navigation }) => {
 					try {
 							setIsLoading(true)
 							const token = await AsyncStorage.getItem('@Formosa:token');
-							await api.post(`/captura/registrar`, {
-									EAN: barcode,
-									CAT_PRECO: productPrice,
-									EMP_ID: route.params.EMP_ID,
-									CAT_SITUACAO: checked,
-									CAT_IMG: baseImage,
-							}, {
+
+							const data = new FormData()
+
+							data.append('EMP_ID', String(route.params.EMP_ID))
+							data.append('EAN', barcode)
+							data.append('CAT_PRECO', productPrice)
+							data.append('CAT_SITUACAO', checked)
+							data.append('CAT_IMG', { 
+								name: `image_${barcode}.jpg`,
+								type: 'image/jpg',
+								uri: image
+							 } as any)
+
+							await api.post(`/captura/registrar`, data, {
 									headers: {
-											Authorization: `Bearer ${token}`
+										'Content-Type': 'multipart/form-data',
+										Authorization: `Bearer ${token}`,
 									}
 							})
 
@@ -302,20 +307,17 @@ const Products: React.FC = ({ route, navigation }) => {
       mediaTypes: ImagePicker.MediaTypeOptions.Images,
       allowsEditing: true,
       aspect: [4, 3],
-			quality: 0,
-			base64: true,
+			quality: 0.4,
 		});
+
 
     if (!result.cancelled) {
 			const localUrl = result.uri
-			const base = result.base64
-			
-			setBaseImage(base)
 			setImage(localUrl);
 		}
 				
 	}, [setImage])
-	
+
 	useEffect(() => {
 		getData();
 	}, [])	
@@ -718,7 +720,7 @@ const styles = StyleSheet.create({
 	container: {
 		position: 'absolute',
 		width: '100%',
-		bottom: 50,
+		bottom: 30,
 		// right: "15.8%",
 		flexDirection: 'row',
 		alignItems: 'center',

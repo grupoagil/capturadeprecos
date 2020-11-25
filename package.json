@@ -8,6 +8,7 @@
     "eject": "expo eject"
   },
   "dependencies": {
+    "@bugsnag/expo": "^7.5.2",
     "@expo-google-fonts/poppins": "^0.1.0",
     "@expo/vector-icons": "^10.2.1",
     "@react-native-community/async-storage": "^1.12.1",
@@ -43,6 +44,7 @@
     "@types/react-native": "~0.63.2",
     "@types/styled-components": "^5.1.4",
     "@types/yup": "^0.29.9",
+    "json-server": "^0.16.3",
     "typescript": "~3.9.5"
   },
   "private": true

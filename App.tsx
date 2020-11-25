@@ -10,7 +10,9 @@ import {
 } from '@expo-google-fonts/poppins'
 
 import Routes from './src/routes';
-import api from './src/services/api';
+import Bugsnag from '@bugsnag/expo'
+
+Bugsnag.start('9def6b02044ddd0a3110d3cd3fa8365d')
 
 const App: React.FC = () => {
   const [fontsLoaded] = useFonts({
