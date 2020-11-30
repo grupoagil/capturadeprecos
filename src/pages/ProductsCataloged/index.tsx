@@ -72,7 +72,6 @@ const ProductsCataloged: React.FC = ({ route, navigation }) => {
 
 	// IMAGE 
 	const [image, setImage] = useState('')
-	
 
 	// Função de buscar produtos para catalogar
 	async function getData() {
@@ -201,7 +200,9 @@ const ProductsCataloged: React.FC = ({ route, navigation }) => {
 																setBarcode(`${item.produto.PROD_EAN}`);
 																setProductPrice(item.CAT_PRECO);
 																setChecked(item.CAT_SITUACAO)
-																setImage(`http://167.249.210.93:9406/${item.CAT_IMG}`)
+																setImage(item.CAT_IMG)
+																
+																
 														}}
 													>
 														<ItemThumbnail
@@ -297,7 +298,7 @@ const ProductsCataloged: React.FC = ({ route, navigation }) => {
 															height: 50,
 															borderRadius: 10
 														}}
-														source={image !== '' ? { uri: image } : marketThumb} 
+														source={{ uri: `http://167.249.210.93:9406/${image}` }} 
 													/>
 												</View>
 

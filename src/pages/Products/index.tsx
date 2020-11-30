@@ -7,6 +7,7 @@ import { TextInputMask } from 'react-native-masked-text'
 import { RadioButton, Modal as ModalDone, TextInput, DefaultTheme } from 'react-native-paper'
 import { RectButton } from 'react-native-gesture-handler';
 import * as ImagePicker from 'expo-image-picker';
+import Bugsnag from '@bugsnag/expo'
 
 import api from '../../services/api';
 
@@ -124,10 +125,8 @@ const Products: React.FC = ({ route, navigation }) => {
 	// Array de Produtos Catalogados
 	const [products, setProducts] = useState([]);
 
-
 	// image
 	const [image, setImage] = useState('')
-	const [baseImage, setBaseImage] = useState('')
 
 	// modal filter
 	const [modalVisible, setModalVisible] = React.useState(false);
@@ -258,11 +257,13 @@ const Products: React.FC = ({ route, navigation }) => {
 							data.append('EAN', barcode)
 							data.append('CAT_PRECO', productPrice)
 							data.append('CAT_SITUACAO', checked)
+							
+							image ? 
 							data.append('CAT_IMG', { 
 								name: `image_${barcode}.jpg`,
 								type: 'image/jpg',
 								uri: image
-							 } as any)
+							 } as any) : null
 
 							await api.post(`/captura/registrar`, data, {
 									headers: {
@@ -274,6 +275,7 @@ const Products: React.FC = ({ route, navigation }) => {
 							getData();
 					} catch (err) {
 							console.log(err)
+							Bugsnag.notify(err)
 					}
 					onClose();
 					setChecked('0')

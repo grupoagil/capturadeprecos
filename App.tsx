@@ -2,6 +2,7 @@ import 'react-native-gesture-handler';
 import React from 'react';
 import { useFonts } from 'expo-font'
 import { AuthProvider } from './src/contexts/auth';
+
 import { 
   Poppins_400Regular, 
   Poppins_600SemiBold, 
@@ -11,6 +12,7 @@ import {
 
 import Routes from './src/routes';
 import Bugsnag from '@bugsnag/expo'
+
 
 Bugsnag.start('9def6b02044ddd0a3110d3cd3fa8365d')
 
