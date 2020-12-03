@@ -1,12 +1,11 @@
-import React, { useContext, useState, useEffect, useRef } from 'react';
-import { StatusBar, RefreshControl} from 'react-native';
+import React, { useContext, useState, useEffect, useRef, useCallback } from 'react';
+import { StatusBar, RefreshControl, Platform } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { AuthContext } from '../../contexts/auth';
 import AsyncStorage from '@react-native-community/async-storage';
 import Constants from 'expo-constants';
 import * as Notifications from 'expo-notifications';
 import * as Permissions from 'expo-permissions';
-import { Platform } from 'react-native';
 
 import api from '../../services/api';
 
@@ -133,8 +132,7 @@ const EstablishmentSelect: React.FC = ({ navigation }) => {
 									Authorization: `Bearer ${token}`
 							}
 					});
-
-
+					
 					setFetchedData(Object.values(response.data));
 					setIsLoading(false);
 			} catch (err) {
@@ -160,7 +158,6 @@ const EstablishmentSelect: React.FC = ({ navigation }) => {
 				setCataloged(Object.values(response.data));
 				setIsLoading(false);
 		} catch (err) {
-			// setCataloged(signOut)
 			console.log(err)
 		}
 		setIsLoading(false);

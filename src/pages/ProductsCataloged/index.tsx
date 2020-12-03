@@ -112,11 +112,13 @@ const ProductsCataloged: React.FC = ({ route, navigation }) => {
 							data.append('CAT_ID', String(id))
 							data.append('CAT_PRECO', productPrice)
 							data.append('CAT_SITUACAO', String(checked))
+
+							image ? 
 							data.append('CAT_IMG', { 
 								name: `image_${barcode}.jpg`,
 								type: 'image/jpg',
 								uri: image
-							 } as any)
+							 } as any) : null 
 
 							await api.post(`/captura/atualizar`, data, {
 									headers: {

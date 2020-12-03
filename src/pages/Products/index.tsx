@@ -7,7 +7,6 @@ import { TextInputMask } from 'react-native-masked-text'
 import { RadioButton, Modal as ModalDone, TextInput, DefaultTheme } from 'react-native-paper'
 import { RectButton } from 'react-native-gesture-handler';
 import * as ImagePicker from 'expo-image-picker';
-import Bugsnag from '@bugsnag/expo'
 
 import api from '../../services/api';
 
@@ -264,7 +263,7 @@ const Products: React.FC = ({ route, navigation }) => {
 								type: 'image/jpg',
 								uri: image
 							 } as any) : null
-
+							
 							await api.post(`/captura/registrar`, data, {
 									headers: {
 										'Content-Type': 'multipart/form-data',
@@ -272,10 +271,10 @@ const Products: React.FC = ({ route, navigation }) => {
 									}
 							})
 
+
 							getData();
 					} catch (err) {
 							console.log(err)
-							Bugsnag.notify(err)
 					}
 					onClose();
 					setChecked('0')

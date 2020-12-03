@@ -2,6 +2,7 @@ import 'react-native-gesture-handler';
 import React from 'react';
 import { useFonts } from 'expo-font'
 import { AuthProvider } from './src/contexts/auth';
+import Reactotron, { asyncStorage } from 'reactotron-react-native'
 
 import { 
   Poppins_400Regular, 
@@ -11,12 +12,18 @@ import {
 } from '@expo-google-fonts/poppins'
 
 import Routes from './src/routes';
-import Bugsnag from '@bugsnag/expo'
+import AsyncStorage from '@react-native-community/async-storage';
 
-
-Bugsnag.start('9def6b02044ddd0a3110d3cd3fa8365d')
+Reactotron
+  .setAsyncStorageHandler(AsyncStorage)
+  // Your real ip address 👇
+  .configure({ host: '192.168.0.163' })
+  .useReactNative()
+  .use(asyncStorage({ ignore: ['secret'] }))
+  .connect()
 
 const App: React.FC = () => {
+  
   const [fontsLoaded] = useFonts({
     Poppins_400Regular,
     Poppins_600SemiBold,
