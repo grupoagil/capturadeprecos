@@ -14,7 +14,7 @@ import {
 import Routes from './src/routes';
 import AsyncStorage from '@react-native-community/async-storage';
 
-Reactotron
+console.tron = Reactotron
   .setAsyncStorageHandler(AsyncStorage)
   // Your real ip address 👇
   .configure({ host: '192.168.0.163' })

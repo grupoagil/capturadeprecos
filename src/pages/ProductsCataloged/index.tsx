@@ -36,7 +36,6 @@ import {
 	ModalTextInput,
 	ModalButton,
 	ModalButtonText,
-	FilterButton,
 	ItemContainer,
 } from './styles';
 
@@ -85,8 +84,11 @@ const ProductsCataloged: React.FC = ({ route, navigation }) => {
 							}
 					});
 					
-					setProductsCataloged(response.data);
+					await AsyncStorage.setItem('@Products:capturados', JSON.stringify(response.data))
+					const saveProducstCataloged = await AsyncStorage.getItem('@Products:capturados') as string
+					setProductsCataloged(JSON.parse(saveProducstCataloged));
 					setIsLoading(false);
+
 			} catch (err) {
 					console.log(err);
 					setIsLoading(false);
@@ -119,13 +121,13 @@ const ProductsCataloged: React.FC = ({ route, navigation }) => {
 								type: 'image/jpg',
 								uri: image
 							 } as any) : null 
-
+							
 							await api.post(`/captura/atualizar`, data, {
-									headers: {
-										'Content-Type': 'multipart/form-data',
-											Authorization: `Bearer ${token}`
-									}
-							})
+										headers: {
+											'Content-Type': 'multipart/form-data',
+												Authorization: `Bearer ${token}`
+										}
+								})
 
 							getData();
 					} catch (err) {

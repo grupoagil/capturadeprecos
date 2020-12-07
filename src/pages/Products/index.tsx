@@ -7,6 +7,7 @@ import { TextInputMask } from 'react-native-masked-text'
 import { RadioButton, Modal as ModalDone, TextInput, DefaultTheme } from 'react-native-paper'
 import { RectButton } from 'react-native-gesture-handler';
 import * as ImagePicker from 'expo-image-picker';
+import NetInfo from '@react-native-community/netinfo';
 
 import api from '../../services/api';
 
@@ -38,7 +39,6 @@ import {
 	ModalTextInput,
 	ModalButton,
 	ModalButtonText,
-	FilterButton,
 	ItemContainer,
 } from './styles';
 
@@ -55,6 +55,24 @@ const Products: React.FC = ({ route, navigation }) => {
 			modalizeRef.current?.close();
 	};
 
+	// estado da internet 
+	const [online, setOnline] = useState(true)
+
+	useEffect(() => {
+		const unsubscribe = NetInfo.addEventListener(state => {
+			console.log('Connection type', state.type);
+			if (state.isConnected === true) {
+				setOnline(true)
+			} else {
+				setOnline(false)
+			}
+			console.log(online)
+		});
+
+		unsubscribe()
+	}, [online]) 
+	
+	// To unsubscribe to these update, just use:
 
 	// Estados dos inputs
 	const [barcode, setBarcode] = useState('');
@@ -227,9 +245,10 @@ const Products: React.FC = ({ route, navigation }) => {
 							headers: {
 									Authorization: `Bearer ${token}`
 							}
-					});
-					
-					setProducts(response.data);
+					});					
+					await AsyncStorage.setItem('@Products:capturar', JSON.stringify(response.data))
+					const getSaveProducts = await AsyncStorage.getItem('@Products:capturar') as string
+					setProducts(JSON.parse(getSaveProducts));
 					setIsLoading(false);
 			} catch (err) {
 					console.log(err);
@@ -264,14 +283,13 @@ const Products: React.FC = ({ route, navigation }) => {
 								uri: image
 							 } as any) : null
 							
-							await api.post(`/captura/registrar`, data, {
-									headers: {
-										'Content-Type': 'multipart/form-data',
-										Authorization: `Bearer ${token}`,
-									}
-							})
-
-
+							const response = await api.post(`/captura/registrar`, data, {
+										headers: {
+											'Content-Type': 'multipart/form-data',
+											Authorization: `Bearer ${token}`,
+										}
+								}) 
+							
 							getData();
 					} catch (err) {
 							console.log(err)

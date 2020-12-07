@@ -133,7 +133,9 @@ const EstablishmentSelect: React.FC = ({ navigation }) => {
 							}
 					});
 					
-					setFetchedData(Object.values(response.data));
+					await AsyncStorage.setItem("@Empresas:capturar", JSON.stringify(response.data))
+					const getSaveData = await AsyncStorage.getItem('@Empresas:capturar') as string					
+					setFetchedData(Object.values(JSON.parse(getSaveData)));
 					setIsLoading(false);
 			} catch (err) {
 
@@ -154,8 +156,9 @@ const EstablishmentSelect: React.FC = ({ navigation }) => {
 						}
 				}
 				);
-
-				setCataloged(Object.values(response.data));
+				await AsyncStorage.setItem('@Empresas:capturadas', JSON.stringify(response.data))
+				const getSaveCaptured = await AsyncStorage.getItem('@Empresas:capturadas') as string
+				setCataloged(Object.values(JSON.parse(getSaveCaptured)));
 				setIsLoading(false);
 		} catch (err) {
 			console.log(err)
@@ -171,8 +174,8 @@ const EstablishmentSelect: React.FC = ({ navigation }) => {
 	}
 
 	useEffect(() => {
-		getCataloged()
 		fetchData();
+		getCataloged()
 	}, [])
 
 	return (

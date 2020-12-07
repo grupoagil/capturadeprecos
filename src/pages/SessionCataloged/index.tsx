@@ -34,8 +34,10 @@ const Session: React.FC = ({ navigation, route }) => {
           Authorization: `Bearer ${token}`
         }
       })
+      await AsyncStorage.setItem('@Session:capturado', JSON.stringify(response.data))
+      const getSaveSession = await AsyncStorage.getItem('@Session:capturado') as string
 
-      setSessions(response.data)
+      setSessions(JSON.parse(getSaveSession))
       setIsLoading(false)
 
     } catch (error) {
