@@ -3,8 +3,8 @@ import { Alert, StatusBar, View, StyleSheet, Image, Text, Platform } from 'react
 import AsyncStorage from '@react-native-community/async-storage';
 import { MaterialIcons, MaterialCommunityIcons, Feather } from '@expo/vector-icons';
 import { Modalize } from 'react-native-modalize';
-import { RadioButton } from 'react-native-paper'
-import { TextInputMask } from 'react-native-masked-text'
+import { RadioButton } from 'react-native-paper';
+import { TextInputMask } from 'react-native-masked-text';
 import * as ImagePicker from 'expo-image-picker';
 
 

@@ -48,30 +48,22 @@ const Products: React.FC = ({ route, navigation }) => {
 	const modalizeRef = useRef<Modalize>(null);
 
 	const onOpen = () => {
-			modalizeRef.current?.open();
+		modalizeRef.current?.open();
 	};
 
 	const onClose = () => {
-			modalizeRef.current?.close();
+		modalizeRef.current?.close();
 	};
 
 	// estado da internet 
-	const [online, setOnline] = useState(true)
-
-	useEffect(() => {
-		const unsubscribe = NetInfo.addEventListener(state => {
-			console.log('Connection type', state.type);
-			if (state.isConnected === true) {
-				setOnline(true)
-			} else {
-				setOnline(false)
-			}
-			console.log(online)
+	const [online, setOnline] = useState(false)
+	function isOnline () {
+		NetInfo.fetch().then(state => {
+			setOnline(state.isConnected)
 		});
+	}
 
-		unsubscribe()
-	}, [online]) 
-	
+
 	// To unsubscribe to these update, just use:
 
 	// Estados dos inputs
@@ -85,55 +77,55 @@ const Products: React.FC = ({ route, navigation }) => {
 	// FAB BUTTON
 	const [open, setOpen] = useState(false)
 	const [animation] = useState(new Animated.Value(0))
-	
-	const toggleMenu = () => {
-    var toValue = open ? 0 : 1
 
-    Animated.spring(animation, {
-      toValue: toValue,
+	const toggleMenu = () => {
+		var toValue = open ? 0 : 1
+
+		Animated.spring(animation, {
+			toValue: toValue,
 			friction: 5,
 			useNativeDriver: true
-    }).start()
+		}).start()
 
-    setOpen(!open)
-  }
+		setOpen(!open)
+	}
 
-  const rotation = {
-    transform: [
-      {
-        rotate: animation.interpolate({
-          inputRange: [0, 1],
-          outputRange: ["0deg", "45deg"]
-        })
-      }
-    ]
-  }
+	const rotation = {
+		transform: [
+			{
+				rotate: animation.interpolate({
+					inputRange: [0, 1],
+					outputRange: ["0deg", "45deg"]
+				})
+			}
+		]
+	}
 
-  const homeStyle = {
-    transform: [
-      { scale: animation },
-      {
-        translateY: animation.interpolate({
-          inputRange: [0, 1],
-          outputRange: [0, -10]
-        })
+	const homeStyle = {
+		transform: [
+			{ scale: animation },
+			{
+				translateY: animation.interpolate({
+					inputRange: [0, 1],
+					outputRange: [0, -10]
+				})
 			},
-    ]
-  }
+		]
+	}
 
-  const heartStyle = {
-    transform: [
-      { scale: animation },
-      {
-        translateY: animation.interpolate({
-          inputRange: [0, 1],
+	const heartStyle = {
+		transform: [
+			{ scale: animation },
+			{
+				translateY: animation.interpolate({
+					inputRange: [0, 1],
 					outputRange: [0, -20],
-					
-        })
-      }
-    ]
-  }
-	
+
+				})
+			}
+		]
+	}
+
 
 	// Estados de atividade
 	const [isLoading, setIsLoading] = useState(false);
@@ -151,7 +143,7 @@ const Products: React.FC = ({ route, navigation }) => {
 	const [modalCodeWrite, setModalCodeWrite] = useState(false)
 	const [data, setData] = React.useState("")
 	const [type, setType] = React.useState("")
-	
+
 	// pesquisar produto Pesquisar do produto por código de barras (digitado)
 	const [barcodeText, setBarcodeText] = useState('')
 	const theme = {
@@ -166,7 +158,7 @@ const Products: React.FC = ({ route, navigation }) => {
 	const onCodeText = useCallback(async () => {
 		setIsLoading(true)
 		const token = await AsyncStorage.getItem('@Formosa:token')
-		
+
 		try {
 			const response = await api.get(`/captura/barcode/${route.params.EMP_ID}/${barcodeText}`, {
 				headers: {
@@ -175,171 +167,185 @@ const Products: React.FC = ({ route, navigation }) => {
 			})
 
 			const filterProductName = response.data.PROD_NOME
-				
-				onOpen()
-				setBarcode(barcodeText)
-				setProductName(filterProductName)
-				setProductPrice('R$0,00')
-				setIsLoading(false)
+
+			onOpen()
+			setBarcode(barcodeText)
+			setProductName(filterProductName)
+			setProductPrice('R$0,00')
+			setIsLoading(false)
 
 		} catch (error) {
 			console.log(error)
 
-				Alert.alert('Error', 'Produto não encontrado', [
-					{text: 'OK', onPress: () => console.log('alert closed')}
-				])
+			Alert.alert('Error', 'Produto não encontrado', [
+				{ text: 'OK', onPress: () => console.log('alert closed') }
+			])
 		}
-		
+
 		setModalCodeWrite(false)
 		setBarcodeText('')
 		setIsLoading(false)
 	}, [barcodeText])
 
-	
+
 	// Pesquisar do produto por código de barras (camera)
 	const onCodeScanned = useCallback(async (type, data) => {
 		setIsLoading(true)
 		const token = await AsyncStorage.getItem('@Formosa:token')
 
-			try {
-				setType(type)
-				setData(data);
-				
-				const response = await api.get(`/captura/barcode/${route.params.EMP_ID}/${data}`, {
-					headers: {
-						Authorization: `Bearer ${token}`
-					}
-				})
+		try {
+			setType(type)
+			setData(data);
 
-				const filterProductName = response.data.PROD_NOME
-				Alert.alert(`Código de barras escaneado com sucesso!${"\n"}${data}`)
-				if (productPrice === "0.00" || productPrice === "R$0,00") {
-					Alert.alert('Error', 'preço não pode ser 0,00')
-				}
-				
-				onOpen()
-				setBarcode(data)
-				setProductName(filterProductName)
-				setProductPrice('R$0,00')
-				
-			} catch (error) {
-				console.log(error)
-
-				Alert.alert('Error', 'Produto não encontrado', [
-					{text: 'OK', onPress: () => console.log('alert closed')}
-				])
-				
-			}
-		setModalVisible(false);
-		setIsLoading(false)
-	}, [data])
-	
-
-	// Função de buscar produtos para catalogar
-	async function getData() {
-		setIsLoading(true)
-			try {
-					const token = await AsyncStorage.getItem('@Formosa:token');
-
-					const response = await api.get(`/captura/empresas/${route.params.EMP_ID}/secoes/${route.params.SESSION}/produtos`, {
-							headers: {
-									Authorization: `Bearer ${token}`
-							}
-					});					
-					await AsyncStorage.setItem('@Products:capturar', JSON.stringify(response.data))
-					const getSaveProducts = await AsyncStorage.getItem('@Products:capturar') as string
-					setProducts(JSON.parse(getSaveProducts));
-					setIsLoading(false);
-			} catch (err) {
-					console.log(err);
-					setIsLoading(false);
-			}
-			setIsLoading(false);
-	}
-
-	// Função de enviar produto ao banco de dados = catalogar produto;
-	async function handleSubmit() {
-
-			if (!productPrice || !barcode || !productName) {
-					Alert.alert('Todos os campos devem ser preenchidos.')
-			} else if(productPrice === "0.00" || productPrice === "R$0,00" || productPrice === "0,00") {
-				Alert.alert('Error', 'O preço não pode ser R$0,00')
-			} else {
-					try {
-							setIsLoading(true)
-							const token = await AsyncStorage.getItem('@Formosa:token');
-
-							const data = new FormData()
-
-							data.append('EMP_ID', String(route.params.EMP_ID))
-							data.append('EAN', barcode)
-							data.append('CAT_PRECO', productPrice)
-							data.append('CAT_SITUACAO', checked)
-							
-							image ? 
-							data.append('CAT_IMG', { 
-								name: `image_${barcode}.jpg`,
-								type: 'image/jpg',
-								uri: image
-							 } as any) : null
-							
-							const response = await api.post(`/captura/registrar`, data, {
-										headers: {
-											'Content-Type': 'multipart/form-data',
-											Authorization: `Bearer ${token}`,
-										}
-								}) 
-							
-							getData();
-					} catch (err) {
-							console.log(err)
-					}
-					onClose();
-					setChecked('0')
-			}
-	}
-
-	const handleEndSearch = useCallback(async() => {
-		const token = await AsyncStorage.getItem('@Formosa:token');
-		await api.post('/captura/concluir', {
-				EMP_ID: route.params.EMP_ID
-			}, {
+			const response = await api.get(`/captura/barcode/${route.params.EMP_ID}/${data}`, {
 				headers: {
 					Authorization: `Bearer ${token}`
 				}
+			})
+
+			const filterProductName = response.data.PROD_NOME
+			Alert.alert(`Código de barras escaneado com sucesso!${"\n"}${data}`)
+			if (productPrice === "0.00" || productPrice === "R$0,00") {
+				Alert.alert('Error', 'preço não pode ser 0,00')
 			}
+
+			onOpen()
+			setBarcode(data)
+			setProductName(filterProductName)
+			setProductPrice('R$0,00')
+
+		} catch (error) {
+			console.log(error)
+
+			Alert.alert('Error', 'Produto não encontrado', [
+				{ text: 'OK', onPress: () => console.log('alert closed') }
+			])
+
+		}
+		setModalVisible(false);
+		setIsLoading(false)
+	}, [data])
+
+
+	// Função de buscar produtos para catalogar
+	async function getData () {
+		if (!online) {
+			console.log(online);
+
+			const databaseData = await AsyncStorage.getItem('@DatabaseALL') as string
+			console.log(databaseData);
+			const myProducts = Object.values(JSON.parse(databaseData).paraCatalogar[route.params.EMP_ID].secao[route.params.SESSION].produtos)
+			setProducts(myProducts.map(item => ({ "produto": item })) as any)
+			return
+		}
+		setIsLoading(true)
+		try {
+			const token = await AsyncStorage.getItem('@Formosa:token');
+
+			const response = await api.get(`/captura/empresas/${route.params.EMP_ID}/secoes/${route.params.SESSION}/produtos`, {
+				headers: {
+					Authorization: `Bearer ${token}`
+				}
+			});
+
+
+
+			await AsyncStorage.setItem('@Products:capturar', JSON.stringify(response.data))
+			const getSaveProducts = await AsyncStorage.getItem('@Products:capturar') as string
+			setProducts(JSON.parse(getSaveProducts));
+			setIsLoading(false);
+		} catch (err) {
+			console.log(err);
+			setIsLoading(false);
+		}
+		setIsLoading(false);
+	}
+
+	// Função de enviar produto ao banco de dados = catalogar produto;
+	async function handleSubmit () {
+
+		if (!productPrice || !barcode || !productName) {
+			Alert.alert('Todos os campos devem ser preenchidos.')
+		} else if (productPrice === "0.00" || productPrice === "R$0,00" || productPrice === "0,00") {
+			Alert.alert('Error', 'O preço não pode ser R$0,00')
+		} else {
+			try {
+				setIsLoading(true)
+				const token = await AsyncStorage.getItem('@Formosa:token');
+
+				const data = new FormData()
+
+				data.append('EMP_ID', String(route.params.EMP_ID))
+				data.append('EAN', barcode)
+				data.append('CAT_PRECO', productPrice)
+				data.append('CAT_SITUACAO', checked)
+
+				image ?
+					data.append('CAT_IMG', {
+						name: `image_${barcode}.jpg`,
+						type: 'image/jpg',
+						uri: image
+					} as any) : null
+
+				const response = await api.post(`/captura/registrar`, data, {
+					headers: {
+						'Content-Type': 'multipart/form-data',
+						Authorization: `Bearer ${token}`,
+					}
+				})
+				isOnline();
+				getData();
+			} catch (err) {
+				console.log(err)
+			}
+			onClose();
+			setChecked('0')
+		}
+	}
+
+	const handleEndSearch = useCallback(async () => {
+		const token = await AsyncStorage.getItem('@Formosa:token');
+		await api.post('/captura/concluir', {
+			EMP_ID: route.params.EMP_ID
+		}, {
+			headers: {
+				Authorization: `Bearer ${token}`
+			}
+		}
 		)
 
 		setModalDoneVisible(false)
-		getData()
+		isOnline();
+		getData();
 	}, [])
 
 	const pickImage = useCallback(async () => {
-    if (Platform.OS !== 'web') {
-      const { status } = await ImagePicker.requestCameraRollPermissionsAsync();
-      if (status !== 'granted') {
-        alert('Sorry, we need camera roll permissions to make this work!');
-      }
-    }
+		if (Platform.OS !== 'web') {
+			const { status } = await ImagePicker.requestCameraRollPermissionsAsync();
+			if (status !== 'granted') {
+				alert('Sorry, we need camera roll permissions to make this work!');
+			}
+		}
 
-    const result = await ImagePicker.launchCameraAsync({
-      mediaTypes: ImagePicker.MediaTypeOptions.Images,
-      allowsEditing: true,
-      aspect: [4, 3],
+		const result = await ImagePicker.launchCameraAsync({
+			mediaTypes: ImagePicker.MediaTypeOptions.Images,
+			allowsEditing: true,
+			aspect: [4, 3],
 			quality: 0.4,
 		});
 
 
-    if (!result.cancelled) {
+		if (!result.cancelled) {
 			const localUrl = result.uri
 			setImage(localUrl);
 		}
-				
+
 	}, [setImage])
 
 	useEffect(() => {
+		isOnline();
 		getData();
-	}, [])	
+	}, [])
 
 	return (
 		<>
@@ -368,307 +374,307 @@ const Products: React.FC = ({ route, navigation }) => {
 						<Content
 							showsVerticalScrollIndicator={false}
 							ListEmptyComponent={() => {
-									return (
-										<BoxEmpty />
-									);
+								return (
+									<BoxEmpty />
+								);
 							}}
 							data={products}
 							keyExtractor={(item) => String(item.produto.id)}
 							renderItem={({ item }) => {
-							return (
-								<ItemContainer>
-									<Item
-										onPress={() => {
-											onOpen();
-											setProductName(item.produto.PROD_NOME);
-											setBarcode(`${item.produto.PROD_EAN}`);
-											setProductPrice('0,00');
-										}}
-									>
-										<ItemThumbnail
-											source={marketThumb}
-											style={{ resizeMode: 'cover' }}
-										/>
-										<ItemContent>
-											<ItemName
-												numberOfLines={2}
-												ellipsizeMode="tail"
-											>{item.produto.PROD_NOME}</ItemName>
-											<ItemBrand>{item.produto.PROD_EAN}</ItemBrand>
-										</ItemContent>
-									</Item>
-								</ItemContainer>
+								return (
+									<ItemContainer>
+										<Item
+											onPress={() => {
+												onOpen();
+												setProductName(item.produto.PROD_NOME);
+												setBarcode(`${item.produto.PROD_EAN}`);
+												setProductPrice('0,00');
+											}}
+										>
+											<ItemThumbnail
+												source={marketThumb}
+												style={{ resizeMode: 'cover' }}
+											/>
+											<ItemContent>
+												<ItemName
+													numberOfLines={2}
+													ellipsizeMode="tail"
+												>{item.produto.PROD_NOME}</ItemName>
+												<ItemBrand>{item.produto.PROD_EAN}</ItemBrand>
+											</ItemContent>
+										</Item>
+									</ItemContainer>
 								);
-							}}/>
-						}
-				</Container>
+							}} />
+				}
+			</Container>
 
-					{/* modal filter */}
+			{/* modal filter */}
 
-					<View style={styles.container}>
+			<View style={styles.container}>
 
-						<RectButton style={styles.buttonDoneContainer} onPress={() => setModalDoneVisible(true)}>
-							<Ionicons name="md-done-all" size={24} color="#fff" />
+				<RectButton style={styles.buttonDoneContainer} onPress={() => setModalDoneVisible(true)}>
+					<Ionicons name="md-done-all" size={24} color="#fff" />
+				</RectButton>
+
+				<View style={{ height: 50, bottom: 92.3 }}>
+					<Animated.View style={[styles.button, styles.subMenu, heartStyle]}>
+						<Feather
+							onPress={() => setModalVisible(true)}
+							name="camera"
+							size={18}
+							color="#FFF"
+						/>
+					</Animated.View>
+					<Animated.View style={[styles.button, styles.subMenu, homeStyle]}>
+						<MaterialIcons
+							onPress={() => setModalCodeWrite(true)}
+							name="touch-app"
+							size={18}
+							color="#FFF"
+						/>
+					</Animated.View>
+					<TouchableWithoutFeedback onPress={toggleMenu}>
+						<Animated.View style={[styles.button, styles.menu]}>
+							<Animated.View style={[rotation]}>
+								<Feather
+									name="plus"
+									size={26}
+									color="#FFF"
+								/>
+							</Animated.View>
+						</Animated.View>
+					</TouchableWithoutFeedback>
+				</View>
+			</View>
+
+
+
+			<ModalDone
+				contentContainerStyle={{ backgroundColor: '#fff', padding: 20, margin: 20 }}
+				visible={modalDoneVisible}
+				onDismiss={() => setModalDoneVisible(false)}
+			>
+				<View style={styles.modalDoneContent}>
+					<Text style={{
+						fontFamily: 'Poppins_400Regular',
+					}}
+					>
+						Deseja Finalizar a pesquisa?
+								</Text>
+					<View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 20 }}>
+						<RectButton
+							onPress={handleEndSearch}
+							style={styles.buttonDone}>
+							<Text
+								style={{ fontFamily: 'Poppins_600SemiBold', color: '#f5f4f4' }}
+							>
+								Sim
+									</Text>
 						</RectButton>
 
-						<View style={{ height: 50, bottom: 92.3 }}>
-							<Animated.View style={[styles.button, styles.subMenu, heartStyle]}>
-								<Feather
-									onPress={() => setModalVisible(true)}
-									name="camera" 
-									size={18} 
-									color="#FFF"
-								/>
-							</Animated.View>        
-							<Animated.View style={[styles.button, styles.subMenu, homeStyle]}>
-								<MaterialIcons
-									onPress={() => setModalCodeWrite(true)}
-									name="touch-app" 
-									size={18} 
-									color="#FFF"
-								/>
-							</Animated.View>        
-						<TouchableWithoutFeedback onPress={toggleMenu}>
-							<Animated.View style={[styles.button, styles.menu]}>
-								<Animated.View style={[rotation]}>
-									<Feather
-										name="plus" 
-										size={26} 
-										color="#FFF"
-									/>
-								</Animated.View>
-							</Animated.View>        
-						</TouchableWithoutFeedback>
+						<RectButton
+							style={styles.buttonCancelDone}
+							onPress={() => setModalDoneVisible(false)}
+						>
+							<Text
+								style={{ fontFamily: 'Poppins_600SemiBold', color: '#f5f4f4' }}
+							>
+								Não
+									</Text>
+						</RectButton>
+					</View>
+				</View>
+			</ModalDone>
+
+			<Modal
+				visible={modalVisible}
+				transparent={true}
+				animationType="slide"
+				onRequestClose={() => setModalVisible(false)}
+			>
+				<View style={styles.modal}>
+					<Scanner onCodeScanned={onCodeScanned} />
+					<Button title="Cancelar" onPress={() => setModalVisible(false)} />
+				</View>
+			</Modal>
+
+			{isLoading === true ? <Loading /> : (
+
+				<ModalDone
+					visible={modalCodeWrite}
+					contentContainerStyle={{ backgroundColor: '#fff', padding: 20, margin: 20, borderRadius: 8 }}
+					onDismiss={() => setModalCodeWrite(false)}
+				>
+					<TextInput
+						returnKeyType="done"
+						keyboardType="number-pad"
+						theme={theme}
+						label="Digite o codigo de barras"
+						value={barcodeText}
+						onChangeText={barcodeText => (setBarcodeText(barcodeText))}
+					/>
+
+					<View style={styles.modalDoneContent}>
+						<View style={{ flexDirection: 'row', alignItems: 'center', marginTop: 20 }}>
+							<RectButton
+								onPress={onCodeText}
+								style={{ ...styles.buttonDone, width: 100 }}>
+								<Text
+									style={{ fontFamily: 'Poppins_600SemiBold', color: '#f5f4f4' }}
+								>
+									Pesquisar
+										</Text>
+							</RectButton>
+
+							<RectButton
+								style={{ ...styles.buttonCancelDone, width: 100 }}
+								onPress={() => {
+									setBarcodeText('')
+									setModalCodeWrite(false)
+								}}
+							>
+								<Text
+									style={{ fontFamily: 'Poppins_600SemiBold', color: '#f5f4f4' }}
+								>
+									Cancelar
+										</Text>
+							</RectButton>
 						</View>
 					</View>
-					
-					
 
-					<ModalDone
-						contentContainerStyle={{ backgroundColor: '#fff', padding: 20, margin: 20 }}
-						visible={modalDoneVisible}
-						onDismiss={() => setModalDoneVisible(false)}
+				</ModalDone>
+			)}
+			{/* Modal adicionar produto */}
+
+			<Modalize
+				ref={modalizeRef}
+				snapPoint={650}
+				avoidKeyboardLikeIOS={true}
+				onClosed={() => setImage('')}
+			>
+				{isLoading === true ? <Loading /> : (
+
+					<ModalContainer
+						keyboardShouldPersistTaps="always"
 					>
-						<View style={styles.modalDoneContent}>
-							<Text style={{ 
-								fontFamily: 'Poppins_400Regular',
-							}}
-								>
-									Deseja Finalizar a pesquisa?
-								</Text>
-							<View style={{flexDirection: 'row', alignItems: 'center', marginTop: 20}}>
-								<RectButton 
-								onPress={handleEndSearch}
-								style={styles.buttonDone}>
-									<Text 
-										style={{ fontFamily: 'Poppins_600SemiBold', color: '#f5f4f4' }}
-									>
-										Sim
-									</Text>
-								</RectButton>
+						<ModalTitle>Adicionar produto</ModalTitle>
+						<ModalInputContainer>
+							<ModalInput>
+								<MaterialCommunityIcons name="barcode-scan" size={30} color="#757474" />
+								<ModalTextInput
+									textAlign='center'
+									value={barcode}
+									onChangeText={value => setBarcode(value)}
+								/>
 
-								<RectButton 
-								style={styles.buttonCancelDone}
-								onPress={() => setModalDoneVisible(false)}
-								>
-									<Text
-										style={{ fontFamily: 'Poppins_600SemiBold', color: '#f5f4f4' }}
-									>
-										Não
-									</Text>
-								</RectButton>
-							</View>
-						</View>
-					</ModalDone>
+							</ModalInput>
+						</ModalInputContainer>
+						<ModalInputContainer >
+							<ModalLabel>Nome do produto</ModalLabel>
+							<ModalInput>
+								<ModalTextInput
+									autoCapitalize='characters'
+									value={productName}
+									onChangeText={value => setProductName(value)}
+								/>
+							</ModalInput>
+						</ModalInputContainer>
+						<ModalGroup>
+							<ModalInputContainer
+								insideModalGroup={true}
+							>
+								<ModalLabel>Preço</ModalLabel>
+								<ModalInput>
 
-					<Modal
-						visible={modalVisible}
-						transparent={true}
-						animationType="slide"
-						onRequestClose={() => setModalVisible(false)}
-					>
-						<View style={styles.modal}>
-							<Scanner onCodeScanned={onCodeScanned} />
-							<Button title="Cancelar" onPress={() => setModalVisible(false)} />
-						</View>
-					</Modal>
+									<TextInputMask
+										style={styles.maskPrice}
+										type="money"
+										keyboardType="number-pad"
+										value={productPrice}
+										options={{
+											precision: 2,
+											separator: ',',
+											delimiter: '.',
+											unit: 'R$',
+											suffixUnit: ''
+										}}
+										onChangeText={value => setProductPrice(value)}
+									/>
+								</ModalInput>
 
-					{isLoading === true ? <Loading /> : (
-
-					<ModalDone
-						visible={modalCodeWrite}
-						contentContainerStyle={{ backgroundColor: '#fff', padding: 20, margin: 20, borderRadius: 8 }}
-						onDismiss={() => setModalCodeWrite(false)}
-					>
-							<TextInput 
-								returnKeyType="done"
-								keyboardType="number-pad"
-								theme={theme}
-								label="Digite o codigo de barras"
-								value={barcodeText}
-								onChangeText={barcodeText => (setBarcodeText(barcodeText))}
-							/>
-
-							<View style={styles.modalDoneContent}>
-								<View style={{flexDirection: 'row', alignItems: 'center', marginTop: 20}}>
-									<RectButton 
-									onPress={onCodeText}
-									style={{...styles.buttonDone, width: 100}}>
-										<Text 
-											style={{ fontFamily: 'Poppins_600SemiBold', color: '#f5f4f4' }}
-										>
-											Pesquisar
-										</Text>
-									</RectButton>
-
-									<RectButton 
-									style={{...styles.buttonCancelDone, width: 100}}
-									onPress={() => {
-										setBarcodeText('')
-										setModalCodeWrite(false)
-									}}
-									>
-										<Text
-											style={{ fontFamily: 'Poppins_600SemiBold', color: '#f5f4f4' }}
-										>
-											Cancelar
-										</Text>
-									</RectButton>
+								<ModalLabel style={{ marginTop: 14 }}>Foto do produto</ModalLabel>
+								<View style={styles.buttonProductPhoto}>
+									<Feather
+										name="camera"
+										size={24}
+										color="#333"
+										onPress={pickImage}
+									/>
+									<Image
+										resizeMode="contain"
+										style={{
+											width: 50,
+											height: 50,
+											borderRadius: 10
+										}}
+										source={image !== '' ? { uri: image } : marketThumb}
+									/>
 								</View>
-							</View>
-							
-					</ModalDone>
-					)}
-				{/* Modal adicionar produto */}
 
-				<Modalize
-					ref={modalizeRef}
-					snapPoint={650}
-					avoidKeyboardLikeIOS={true}
-					onClosed={() => setImage('')}
-				>
-					{isLoading === true ? <Loading /> : (
+								<View style={styles.radioButton}>
+									<View style={styles.radioButtonContent}>
+										<Text style={styles.radioButtonText}>Normal</Text>
+										<RadioButton
+											value="0"
+											status={checked === '0' ? 'checked' : 'unchecked'}
+											onPress={() => setChecked("0")}
+										/>
+									</View>
+									<View style={{ ...styles.radioButtonContent, marginLeft: 15 }}>
+										<Text style={styles.radioButtonText}>Promoção</Text>
+										<RadioButton
+											value="1"
+											status={checked === '1' ? 'checked' : 'unchecked'}
+											onPress={() => setChecked("1")}
+										/>
+									</View>
+								</View>
+							</ModalInputContainer>
 
-						<ModalContainer
-							keyboardShouldPersistTaps="always"
-						>
-								<ModalTitle>Adicionar produto</ModalTitle>
-								<ModalInputContainer>
-										<ModalInput>
-											<MaterialCommunityIcons name="barcode-scan" size={30} color="#757474" />
-												<ModalTextInput
-														textAlign='center'
-														value={barcode}
-														onChangeText={value => setBarcode(value)}
-												/>
-												
-										</ModalInput>
-								</ModalInputContainer>
-								<ModalInputContainer >
-										<ModalLabel>Nome do produto</ModalLabel>
-										<ModalInput>
-												<ModalTextInput
-														autoCapitalize='characters'
-														value={productName}
-														onChangeText={value => setProductName(value)}
-												/>
-										</ModalInput>
-								</ModalInputContainer>
-								<ModalGroup>
-										<ModalInputContainer
-												insideModalGroup={true}
-										>
-												<ModalLabel>Preço</ModalLabel>
-												<ModalInput>
-														
-														<TextInputMask
-																style={styles.maskPrice}
-																type="money"
-																keyboardType="number-pad"
-																value={productPrice}
-																options={{
-																	precision: 2,
-																	separator: ',',
-																	delimiter: '.',
-																	unit: 'R$',
-																	suffixUnit: ''
-																}}
-																onChangeText={value => setProductPrice(value)}
-														/>
-												</ModalInput>
+						</ModalGroup>
+						<ModalGroup>
+							<ModalButton
+								isButtonCancel={true}
+								onPress={() => {
+									setBarcode('');
+									setProductName('');
+									onClose();
+									setImage('')
+								}}
+							>
+								<ModalButtonText>Cancelar</ModalButtonText>
 
-												<ModalLabel style={{ marginTop: 14 }}>Foto do produto</ModalLabel>
-												<View style={styles.buttonProductPhoto}>
-													<Feather 
-														name="camera" 
-														size={24} 
-														color="#333" 
-														onPress={pickImage}
-													/>
-													<Image 
-														resizeMode="contain"
-														style={{
-															width: 50,
-															height: 50,
-															borderRadius: 10
-														}}
-														source={image !== '' ? { uri: image } : marketThumb} 
-													/>
-												</View>
+							</ModalButton>
+							<ModalButton
+								onPress={handleSubmit}
+							>
+								<ModalButtonText>Adicionar</ModalButtonText>
+							</ModalButton>
+						</ModalGroup>
+					</ModalContainer>
+				)}
 
-												<View style={styles.radioButton}>
-													<View style={styles.radioButtonContent}>
-														<Text style={styles.radioButtonText}>Normal</Text>
-														<RadioButton
-															value="0"
-															status={ checked === '0' ? 'checked' : 'unchecked' }
-															onPress={() => setChecked("0")}
-														/>
-													</View>
-													<View style={{...styles.radioButtonContent, marginLeft: 15}}>
-														<Text style={styles.radioButtonText}>Promoção</Text>
-														<RadioButton
-															value="1"
-															status={ checked === '1' ? 'checked' : 'unchecked' }
-															onPress={() => setChecked("1")}
-														/>
-													</View>
-												</View>
-										</ModalInputContainer>
-										
-								</ModalGroup>
-								<ModalGroup>
-										<ModalButton
-												isButtonCancel={true}
-												onPress={() => {
-														setBarcode('');
-														setProductName('');
-														onClose();
-														setImage('')
-												}}
-										>
-										<ModalButtonText>Cancelar</ModalButtonText>
-
-										</ModalButton>
-										<ModalButton
-												onPress={handleSubmit}
-										>
-												<ModalButtonText>Adicionar</ModalButtonText>
-										</ModalButton>
-								</ModalGroup>
-						</ModalContainer>
-					)}
-
-				</Modalize>
-			</>
+			</Modalize>
+		</>
 	)
 }
 
 const styles = StyleSheet.create({
-  modal: {
+	modal: {
 		flex: 1,
-    alignItems: "center",
-    backgroundColor: "lightgrey",
+		alignItems: "center",
+		backgroundColor: "lightgrey",
 	},
 	maskPrice: {
 		fontFamily: 'Poppins_700Bold',
@@ -682,7 +688,7 @@ const styles = StyleSheet.create({
 		paddingHorizontal: 5,
 		alignItems: 'center',
 		justifyContent: 'space-between',
-		flexDirection: 'row', 
+		flexDirection: 'row',
 		marginTop: 5,
 		marginBottom: 5
 	},
@@ -745,7 +751,7 @@ const styles = StyleSheet.create({
 		alignItems: 'center',
 		justifyContent: 'space-between',
 		paddingHorizontal: 16
-},
+	},
 	button: {
 		// position: 'absolute',
 		padding: 10,

@@ -3,30 +3,41 @@ import { MaterialIcons } from '@expo/vector-icons';
 import marketThumb from '../../assets/images/marketThumb.png';
 import AsyncStorage from '@react-native-community/async-storage';
 import { ScrollView, View } from 'react-native';
+import NetInfo from '@react-native-community/netinfo';
 
 import api from '../../services/api';
 import Loading from '../../components/Loading';
 
-
-import { Container,
-   Header,
-   Thumbnail,
-   HeaderTitleContainer,
-   SupermarketName,
-   Title,
-   SessionCard,
-   SessionName,
-  } from './styles';
-
+import {
+  Container,
+  Header,
+  Thumbnail,
+  HeaderTitleContainer,
+  SupermarketName,
+  Title,
+  SessionCard,
+  SessionName,
+} from './styles';
 
 const Session: React.FC = ({ navigation, route }) => {
-  const [isLoading, setIsLoading] = useState(false) 
+  const [isLoading, setIsLoading] = useState(false)
+  const [sessions, setSessions] = useState([]);
 
-  const [sessions, setSessions] = useState([])
+  const [online, setOnline] = useState(true)
+  function isOnline () {
+    NetInfo.fetch().then(state => {
+      setOnline(state.isConnected)
+    });
+  }
 
-  const getSession = useCallback(async() => {
+
+  async function getSession () {
+    if (!online) {
+      const databaseData = await AsyncStorage.getItem('@DatabaseALL') as string
+      setSessions(Object.keys(JSON.parse(databaseData).paraCatalogar[route.params.EMP_ID].secao) as any)
+      return
+    }
     setIsLoading(true)
-
     try {
       const token = await AsyncStorage.getItem('@Formosa:token')
       const response = await api.get(`/captura/empresas/${route.params.EMP_ID}/secoes`, {
@@ -34,19 +45,19 @@ const Session: React.FC = ({ navigation, route }) => {
           Authorization: `Bearer ${token}`
         }
       })
-
       await AsyncStorage.setItem('@Session:capturar', JSON.stringify(response.data))
       const getSaveSession = await AsyncStorage.getItem('@Session:capturar') as string
-
-      setSessions(JSON.parse(getSaveSession))
+      await AsyncStorage.setItem('@DatabaseSession:capturar', JSON.stringify(response.data))
+      setSessions(JSON.parse(getSaveSession));
       setIsLoading(false)
-
     } catch (error) {
       console.log(error)
     }
-  }, [])
+  }
+
 
   useEffect(() => {
+    isOnline();
     getSession()
   }, [])
 
@@ -69,24 +80,24 @@ const Session: React.FC = ({ navigation, route }) => {
       </Header>
       <Title>Sessão</Title>
 
-    {isLoading === true ? <Loading /> : (
+      {isLoading === true ? <Loading /> : (
 
-      <ScrollView contentContainerStyle={{ alignItems: 'center', width: "100%" }}>
+        <ScrollView contentContainerStyle={{ alignItems: 'center', width: "100%" }}>
 
-        {sessions.map(session => (
-          <View  key={session} style={{ width: "100%", alignItems: "center" }}>
-            <SessionCard onPress={() => navigation.navigate('Products', {
-              EMP_ID: route.params.EMP_ID,
-              SESSION: session,
-              EMP_NAME: route.params.EMP_NAME.trim(),
-            })}>
-              <SessionName>{session}</SessionName>
-            </SessionCard>
-          </View>
+          {sessions.map(session => (
+            <View key={session} style={{ width: "100%", alignItems: "center" }}>
+              <SessionCard onPress={() => navigation.navigate('Products', {
+                EMP_ID: route.params.EMP_ID,
+                SESSION: session,
+                EMP_NAME: route.params.EMP_NAME.trim(),
+              })}>
+                <SessionName>{session}</SessionName>
+              </SessionCard>
+            </View>
           )
-        )}
-      </ScrollView>
-    )}
+          )}
+        </ScrollView>
+      )}
 
     </Container>
   )
