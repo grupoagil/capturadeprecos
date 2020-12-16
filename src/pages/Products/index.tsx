@@ -56,12 +56,13 @@ const Products: React.FC = ({ route, navigation }) => {
 	};
 
 	// estado da internet 
-	const [online, setOnline] = useState(false)
 	function isOnline () {
-		NetInfo.fetch().then(state => {
-			setOnline(state.isConnected)
+		NetInfo.fetch().then(async (state) => {
+			await AsyncStorage.setItem('@online', state.isConnected.toString())
+			getSession();
 		});
 	}
+
 
 
 	// To unsubscribe to these update, just use:
@@ -229,11 +230,10 @@ const Products: React.FC = ({ route, navigation }) => {
 
 	// Função de buscar produtos para catalogar
 	async function getData () {
-		if (!online) {
-			console.log(online);
-
+		await isOnline()
+		const online = await AsyncStorage.getItem('@online');
+		if (online !== "true") {
 			const databaseData = await AsyncStorage.getItem('@DatabaseALL') as string
-			console.log(databaseData);
 			const myProducts = Object.values(JSON.parse(databaseData).paraCatalogar[route.params.EMP_ID].secao[route.params.SESSION].produtos)
 			setProducts(myProducts.map(item => ({ "produto": item })) as any)
 			return
@@ -263,6 +263,8 @@ const Products: React.FC = ({ route, navigation }) => {
 
 	// Função de enviar produto ao banco de dados = catalogar produto;
 	async function handleSubmit () {
+		await isOnline()
+		const online = await AsyncStorage.getItem('@online');
 
 		if (!productPrice || !barcode || !productName) {
 			Alert.alert('Todos os campos devem ser preenchidos.')
@@ -273,27 +275,36 @@ const Products: React.FC = ({ route, navigation }) => {
 				setIsLoading(true)
 				const token = await AsyncStorage.getItem('@Formosa:token');
 
-				const data = new FormData()
+				// const data = new FormData()
 
-				data.append('EMP_ID', String(route.params.EMP_ID))
-				data.append('EAN', barcode)
-				data.append('CAT_PRECO', productPrice)
-				data.append('CAT_SITUACAO', checked)
+				// data.append('EMP_ID', String(route.params.EMP_ID))
+				// data.append('EAN', barcode)
+				// data.append('CAT_PRECO', productPrice)
+				// data.append('CAT_SITUACAO', checked)
 
-				image ?
-					data.append('CAT_IMG', {
-						name: `image_${barcode}.jpg`,
-						type: 'image/jpg',
-						uri: image
-					} as any) : null
+				// image ?
+				// 	data.append('CAT_IMG', {
+				// 		name: `image_${barcode}.jpg`,
+				// 		type: 'image/jpg',
+				// 		uri: image
+				// 	} as any) : null
 
-				const response = await api.post(`/captura/registrar`, data, {
-					headers: {
-						'Content-Type': 'multipart/form-data',
-						Authorization: `Bearer ${token}`,
-					}
-				})
-				isOnline();
+				const MyofflineData = {
+					EMP_ID: String(route.params.EMP_ID),
+					EAN: barcode,
+					CAT_PRECO: productPrice,
+					CAT_SITUACAO: checked,
+					IMG: image
+				}
+
+				await AsyncStorage.setItem("@Database:testeTIago", JSON.stringify(MyofflineData))
+				// const response = await api.post(`/captura/registrar`, data, {
+				// 	headers: {
+				// 		'Content-Type': 'multipart/form-data',
+				// 		Authorization: `Bearer ${token}`,
+				// 	}
+				// })
+
 				getData();
 			} catch (err) {
 				console.log(err)
@@ -318,7 +329,31 @@ const Products: React.FC = ({ route, navigation }) => {
 		isOnline();
 		getData();
 	}, [])
+	async function testeTiago () {
+		const MYdata = JSON.parse(await AsyncStorage.getItem('@Database:testeTIago') as string);
 
+		const data = new FormData()
+		data.append('EMP_ID', MYdata.EMP_ID)
+		data.append('EAN', MYdata.EAN)
+		data.append('CAT_PRECO', MYdata.CAT_PRECO)
+		data.append('CAT_SITUACAO', MYdata.CAT_SITUACAO)
+
+		image ?
+			data.append('CAT_IMG', {
+				name: `image_${MYdata.EAN}.jpg`,
+				type: 'image/jpg',
+				uri: MYdata.IMG
+			} as any) : null
+
+		const token = await AsyncStorage.getItem('@Formosa:token');
+		const response = await api.post(`/captura/registrar`, data, {
+			headers: {
+				'Content-Type': 'multipart/form-data',
+				Authorization: `Bearer ${token}`,
+			}
+		})
+		console.log(response);
+	}
 	const pickImage = useCallback(async () => {
 		if (Platform.OS !== 'web') {
 			const { status } = await ImagePicker.requestCameraRollPermissionsAsync();
@@ -333,7 +368,6 @@ const Products: React.FC = ({ route, navigation }) => {
 			aspect: [4, 3],
 			quality: 0.4,
 		});
-
 
 		if (!result.cancelled) {
 			const localUrl = result.uri
@@ -662,6 +696,11 @@ const Products: React.FC = ({ route, navigation }) => {
 								<ModalButtonText>Adicionar</ModalButtonText>
 							</ModalButton>
 						</ModalGroup>
+						<ModalButton
+							onPress={testeTiago}
+						>
+							<ModalButtonText>Teste tiago</ModalButtonText>
+						</ModalButton>
 					</ModalContainer>
 				)}
 

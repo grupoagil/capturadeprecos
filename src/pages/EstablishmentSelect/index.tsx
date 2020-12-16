@@ -61,11 +61,9 @@ const EstablishmentSelect: React.FC = ({ navigation }) => {
 		};
 	}, []);
 
-
-	const [online, setOnline] = useState(false)
 	function isOnline () {
-		NetInfo.fetch().then(state => {
-			setOnline(state.isConnected)
+		NetInfo.fetch().then(async (state) => {
+			await AsyncStorage.setItem('@online', state.isConnected.toString())
 		});
 	}
 
@@ -194,8 +192,9 @@ const EstablishmentSelect: React.FC = ({ navigation }) => {
 	}
 
 	async function handleRefresh () {
-		isOnline()
-		if (!online) {
+		await isOnline()
+		const online = await AsyncStorage.getItem('@online');
+		if (online !== "true") {
 			const databaseData = await AsyncStorage.getItem('@DatabaseALL') as string
 			setFetchedData(Object.values(JSON.parse(databaseData).paraCatalogar));
 			setCataloged(Object.values(JSON.parse(databaseData).catalogados));
@@ -211,9 +210,6 @@ const EstablishmentSelect: React.FC = ({ navigation }) => {
 
 	useEffect(() => {
 		isOnline();
-		getAllData();
-		fetchData();
-		getCataloged();
 	}, [])
 
 	return (

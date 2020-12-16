@@ -23,16 +23,17 @@ const Session: React.FC = ({ navigation, route }) => {
   const [isLoading, setIsLoading] = useState(false)
   const [sessions, setSessions] = useState([]);
 
-  const [online, setOnline] = useState(false)
+  // const [online, setOnline] = useState(false)
   function isOnline () {
-    NetInfo.fetch().then(state => {
-      setOnline(state.isConnected)
+    NetInfo.fetch().then(async (state) => {
+      await AsyncStorage.setItem('@online', state.isConnected.toString())
+      getSession();
     });
   }
 
-  async function getSession () {
-    isOnline();
-    if (!online) {
+  const getSession = useCallback(async () => {
+    const online = await AsyncStorage.getItem('@online');
+    if (online !== "true") {
       const databaseData = await AsyncStorage.getItem('@DatabaseALL') as string
       setSessions(Object.keys(JSON.parse(databaseData).paraCatalogar[route.params.EMP_ID].secao) as any)
       return
@@ -47,13 +48,16 @@ const Session: React.FC = ({ navigation, route }) => {
       })
       await AsyncStorage.setItem('@Session:capturar', JSON.stringify(response.data))
       const getSaveSession = await AsyncStorage.getItem('@Session:capturar') as string
-      await AsyncStorage.setItem('@DatabaseSession:capturar', JSON.stringify(response.data))
       setSessions(JSON.parse(getSaveSession));
       setIsLoading(false)
     } catch (error) {
       console.log(error)
     }
-  }
+  }, [])
+
+  // async function getSession () {
+
+  // }
 
 
   useEffect(() => {
