@@ -62,7 +62,7 @@ const EstablishmentSelect: React.FC = ({ navigation }) => {
 	}, []);
 
 
-	const [online, setOnline] = useState(true)
+	const [online, setOnline] = useState(false)
 	function isOnline () {
 		NetInfo.fetch().then(state => {
 			setOnline(state.isConnected)
@@ -210,7 +210,10 @@ const EstablishmentSelect: React.FC = ({ navigation }) => {
 	}
 
 	useEffect(() => {
-		handleRefresh()
+		isOnline();
+		getAllData();
+		fetchData();
+		getCataloged();
 	}, [])
 
 	return (
@@ -234,6 +237,7 @@ const EstablishmentSelect: React.FC = ({ navigation }) => {
 						:
 						<Content>
 							<Title>A pesquisar</Title>
+
 							<List
 								contentContainerStyle={{
 									paddingHorizontal: 20

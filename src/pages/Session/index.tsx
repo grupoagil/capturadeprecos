@@ -23,15 +23,15 @@ const Session: React.FC = ({ navigation, route }) => {
   const [isLoading, setIsLoading] = useState(false)
   const [sessions, setSessions] = useState([]);
 
-  const [online, setOnline] = useState(true)
+  const [online, setOnline] = useState(false)
   function isOnline () {
     NetInfo.fetch().then(state => {
       setOnline(state.isConnected)
     });
   }
 
-
   async function getSession () {
+    isOnline();
     if (!online) {
       const databaseData = await AsyncStorage.getItem('@DatabaseALL') as string
       setSessions(Object.keys(JSON.parse(databaseData).paraCatalogar[route.params.EMP_ID].secao) as any)
@@ -58,7 +58,7 @@ const Session: React.FC = ({ navigation, route }) => {
 
   useEffect(() => {
     isOnline();
-    getSession()
+    getSession();
   }, [])
 
   return (
