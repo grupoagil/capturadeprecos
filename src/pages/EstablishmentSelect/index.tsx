@@ -310,9 +310,10 @@ const EstablishmentSelect: React.FC = ({ navigation }) => {
 						onPress={AlertSync}
 					/> : <></>}
 
-					<HeaderText>Olá, {user ? user.name : ''} {syncIsavailable.toString()}!</HeaderText>
+					<HeaderText>Olá, {user ? user.name : ''}!</HeaderText>
 				</Header>
 				{
+					
 					isLoading === true && !isRefreshing ?
 						<Loading />
 						:

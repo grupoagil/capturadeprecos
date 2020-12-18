@@ -6,7 +6,7 @@ import { Modalize } from 'react-native-modalize';
 import { RadioButton } from 'react-native-paper';
 import { TextInputMask } from 'react-native-masked-text';
 import * as ImagePicker from 'expo-image-picker';
-
+import NetInfo from '@react-native-community/netinfo';
 
 import api from '../../services/api';
 
@@ -72,6 +72,23 @@ const ProductsCataloged: React.FC = ({ route, navigation }) => {
 	// IMAGE 
 	const [image, setImage] = useState('')
 
+	const [online, setOnline] = useState(true)
+
+	useEffect(() => {
+		const unsubscribe = NetInfo.addEventListener(state => {
+			console.log('Connection type', state.type);
+			console.log('Is connected?', state.isConnected);
+			if (state.isConnected === true) {
+				setOnline(true)
+			} else {
+				setOnline(false)
+			}
+		});
+		
+		// To unsubscribe to these update, just use:
+		unsubscribe();
+	}, [online])
+
 	// Função de buscar produtos para catalogar
 	async function getData() {
 		setIsLoading(true)
@@ -84,9 +101,8 @@ const ProductsCataloged: React.FC = ({ route, navigation }) => {
 							}
 					});
 					
-					await AsyncStorage.setItem('@Products:capturados', JSON.stringify(response.data))
-					const saveProducstCataloged = await AsyncStorage.getItem('@Products:capturados') as string
-					setProductsCataloged(JSON.parse(saveProducstCataloged));
+				
+					setProductsCataloged(response.data);
 					setIsLoading(false);
 
 			} catch (err) {
@@ -128,7 +144,6 @@ const ProductsCataloged: React.FC = ({ route, navigation }) => {
 												Authorization: `Bearer ${token}`
 										}
 								})
-
 							getData();
 					} catch (err) {
 							console.log(err)
@@ -136,6 +151,7 @@ const ProductsCataloged: React.FC = ({ route, navigation }) => {
 					onClose();
 			}
 	}
+
 
 	const pickImage = useCallback(async () => {
     if (Platform.OS !== 'web') {
@@ -186,7 +202,8 @@ const ProductsCataloged: React.FC = ({ route, navigation }) => {
 							</HeaderTitleContainer>
 						</Header>
 						<Title>Produtos pesquisados</Title>
-						{
+						{ online !== true ? Alert.alert('fique online, para atualizar') : 
+						
 							isLoading === true ? <Loading /> :
 									 <Content
 										showsVerticalScrollIndicator={false}
