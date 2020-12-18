@@ -59,17 +59,15 @@ const Products: React.FC = ({ route, navigation }) => {
 	function isOnline () {
 		NetInfo.fetch().then(async (state) => {
 			await AsyncStorage.setItem('@online', state.isConnected.toString())
-			getSession();
 		});
 	}
-
-
 
 	// To unsubscribe to these update, just use:
 
 	// Estados dos inputs
 	const [barcode, setBarcode] = useState('');
 	const [productName, setProductName] = useState('');
+	const [productID, setProductID] = useState('');
 	const [productPrice, setProductPrice] = useState('');
 
 	// radio button
@@ -248,8 +246,6 @@ const Products: React.FC = ({ route, navigation }) => {
 				}
 			});
 
-
-
 			await AsyncStorage.setItem('@Products:capturar', JSON.stringify(response.data))
 			const getSaveProducts = await AsyncStorage.getItem('@Products:capturar') as string
 			setProducts(JSON.parse(getSaveProducts));
@@ -262,6 +258,32 @@ const Products: React.FC = ({ route, navigation }) => {
 	}
 
 	// Função de enviar produto ao banco de dados = catalogar produto;
+	async function databaseHandle () {
+		const databaseData = JSON.parse(await AsyncStorage.getItem('@DatabaseALL') as string)
+
+		if (Array.isArray(databaseData.catalogados)) {
+			databaseData.catalogados = {}
+		}
+		if (!databaseData.catalogados[route.params.EMP_ID]) {
+			databaseData.catalogados[route.params.EMP_ID] = { ...databaseData.paraCatalogar[route.params.EMP_ID] };
+			databaseData.catalogados[route.params.EMP_ID].secao = {};
+		}
+		if (!databaseData.catalogados[route.params.EMP_ID].secao[route.params.SESSION]) {
+			databaseData.catalogados[route.params.EMP_ID].secao[route.params.SESSION] = { produtos: {} };
+		}
+		if (
+			!databaseData.catalogados[route.params.EMP_ID].secao[route.params.SESSION].produtos[productID]
+		) {
+			databaseData.catalogados[route.params.EMP_ID].secao[route.params.SESSION].produtos[productID] = databaseData.paraCatalogar[route.params.EMP_ID].secao[route.params.SESSION].produtos[productID]
+		}
+
+		delete databaseData.paraCatalogar[route.params.EMP_ID].secao[route.params.SESSION].produtos[productID]
+
+		console.log(databaseData);
+
+		await AsyncStorage.setItem("@DatabaseALL", JSON.stringify(databaseData))
+	}
+
 	async function handleSubmit () {
 		await isOnline()
 		const online = await AsyncStorage.getItem('@online');
@@ -270,40 +292,58 @@ const Products: React.FC = ({ route, navigation }) => {
 			Alert.alert('Todos os campos devem ser preenchidos.')
 		} else if (productPrice === "0.00" || productPrice === "R$0,00" || productPrice === "0,00") {
 			Alert.alert('Error', 'O preço não pode ser R$0,00')
-		} else {
+		} else if (online !== "true") {
 			try {
 				setIsLoading(true)
-				const token = await AsyncStorage.getItem('@Formosa:token');
-
-				// const data = new FormData()
-
-				// data.append('EMP_ID', String(route.params.EMP_ID))
-				// data.append('EAN', barcode)
-				// data.append('CAT_PRECO', productPrice)
-				// data.append('CAT_SITUACAO', checked)
-
-				// image ?
-				// 	data.append('CAT_IMG', {
-				// 		name: `image_${barcode}.jpg`,
-				// 		type: 'image/jpg',
-				// 		uri: image
-				// 	} as any) : null
-
 				const MyofflineData = {
 					EMP_ID: String(route.params.EMP_ID),
 					EAN: barcode,
 					CAT_PRECO: productPrice,
 					CAT_SITUACAO: checked,
-					IMG: image
+					IMG: image ? image : null
 				}
 
-				await AsyncStorage.setItem("@Database:testeTIago", JSON.stringify(MyofflineData))
-				// const response = await api.post(`/captura/registrar`, data, {
-				// 	headers: {
-				// 		'Content-Type': 'multipart/form-data',
-				// 		Authorization: `Bearer ${token}`,
-				// 	}
-				// })
+				let offlineSend = await AsyncStorage.getItem('@Database:offlineSend') as string
+				offlineSend = JSON.parse(offlineSend)
+				const offlineSendArray = Array.isArray(offlineSend) ? [...offlineSend, MyofflineData] : [MyofflineData]
+
+				await AsyncStorage.setItem("@Database:offlineSend", JSON.stringify(offlineSendArray))
+
+				databaseHandle();
+				getData();
+			} catch (err) {
+				console.error(err)
+			} finally {
+				setIsLoading(false);
+				onClose();
+				setChecked('0')
+			}
+
+		} else {
+			try {
+				setIsLoading(true)
+				const token = await AsyncStorage.getItem('@Formosa:token');
+
+				const data = new FormData()
+
+				data.append('EMP_ID', String(route.params.EMP_ID))
+				data.append('EAN', barcode)
+				data.append('CAT_PRECO', productPrice)
+				data.append('CAT_SITUACAO', checked)
+
+				image ?
+					data.append('CAT_IMG', {
+						name: `image_${barcode}.jpg`,
+						type: 'image/jpg',
+						uri: image
+					} as any) : null
+
+				await api.post(`/captura/registrar`, data, {
+					headers: {
+						'Content-Type': 'multipart/form-data',
+						Authorization: `Bearer ${token}`,
+					}
+				})
 
 				getData();
 			} catch (err) {
@@ -421,6 +461,7 @@ const Products: React.FC = ({ route, navigation }) => {
 											onPress={() => {
 												onOpen();
 												setProductName(item.produto.PROD_NOME);
+												setProductID(item.produto.id);
 												setBarcode(`${item.produto.PROD_EAN}`);
 												setProductPrice('0,00');
 											}}
@@ -682,6 +723,7 @@ const Products: React.FC = ({ route, navigation }) => {
 								isButtonCancel={true}
 								onPress={() => {
 									setBarcode('');
+									setProductID('');
 									setProductName('');
 									onClose();
 									setImage('')

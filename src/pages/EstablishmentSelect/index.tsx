@@ -1,5 +1,5 @@
 import React, { useContext, useState, useEffect, useRef, useCallback } from 'react';
-import { StatusBar, RefreshControl, Platform } from 'react-native';
+import { StatusBar, RefreshControl, Platform, Button, Alert } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { AuthContext } from '../../contexts/auth';
 import AsyncStorage from '@react-native-community/async-storage';
@@ -7,6 +7,8 @@ import Constants from 'expo-constants';
 import * as Notifications from 'expo-notifications';
 import * as Permissions from 'expo-permissions';
 import NetInfo from '@react-native-community/netinfo';
+
+import { useIsFocused } from "@react-navigation/native";
 
 import api from '../../services/api';
 
@@ -41,6 +43,9 @@ const EstablishmentSelect: React.FC = ({ navigation }) => {
 	const [notification, setNotification] = useState(true);
 	const notificationListener = useRef();
 	const responseListener = useRef();
+
+	const isFocused = useIsFocused()
+
 
 	useEffect(() => {
 		registerForPushNotificationsAsync().then(token => setExpoPushToken(token));
@@ -105,13 +110,15 @@ const EstablishmentSelect: React.FC = ({ navigation }) => {
 					Authorization: `Bearer ${userToken}`
 				}
 			})
-		console.log(response.data)
 		return token;
 	}
 
 	const [fetchedData, setFetchedData] = useState([]);
 	const [cataloged, setCataloged] = useState([])
 	const [isLoading, setIsLoading] = useState(false);
+	const [isLoadingSync, setIsLoadingSync] = useState(false);
+	const [progressSync, setProgressSync] = useState(0);
+	const [syncIsavailable, setSyncIsavailable] = useState(false);
 	const [isRefreshing, setIsRefreshing] = useState(false)
 
 	const { signOut, user } = useContext(AuthContext);
@@ -129,9 +136,15 @@ const EstablishmentSelect: React.FC = ({ navigation }) => {
 		}
 	)
 
-
 	async function getAllData () {
 		const token = await AsyncStorage.getItem('@Formosa:token');
+		try {
+			const offlineSend = await AsyncStorage.getItem('@Database:offlineSend') as string
+			setSyncIsavailable(JSON.parse(offlineSend).length > 0)
+		} catch {
+			setSyncIsavailable(false)
+		}
+
 		try {
 			const response = await api.get(
 				`captura/all`, {
@@ -139,7 +152,6 @@ const EstablishmentSelect: React.FC = ({ navigation }) => {
 					Authorization: `Bearer ${token}`
 				}
 			});
-
 			await AsyncStorage.setItem("@DatabaseALL", JSON.stringify(response.data))
 			setIsLoading(false);
 		} catch (err) {
@@ -191,33 +203,98 @@ const EstablishmentSelect: React.FC = ({ navigation }) => {
 		setIsLoading(false);
 	}
 
-	async function handleRefresh () {
+	function AlertSync () {
+		Alert.alert(
+			'Deseja Sincronizar dados? ',
+			'Dados offline disponiveis.',
+			[
+				{
+					text: 'Sair',
+					style: 'cancel'
+				},
+				{ text: 'OK', onPress: sendOffline }
+			]
+		);
+	}
+
+	async function sendOffline () {
+		const offlineSend = JSON.parse(await AsyncStorage.getItem('@Database:offlineSend') as string)
+
+		setIsLoadingSync(true);
+		setProgressSync(0);
+		const handleArray = []
+		offlineSend.map((MYdata, i) => {
+			setTimeout(async () => {
+
+				try {
+					const data = new FormData()
+					data.append('EMP_ID', MYdata.EMP_ID)
+					data.append('EAN', MYdata.EAN)
+					data.append('CAT_PRECO', MYdata.CAT_PRECO)
+					data.append('CAT_SITUACAO', MYdata.CAT_SITUACAO)
+
+					MYdata.IMG ?
+						data.append('CAT_IMG', {
+							name: `image_${MYdata.EAN}.jpg`,
+							type: 'image/jpg',
+							uri: MYdata.IMG
+						} as any) : null
+
+					const token = await AsyncStorage.getItem('@Formosa:token');
+					const response = await api.post(`/captura/registrar`, data, {
+						headers: {
+							'Content-Type': 'multipart/form-data',
+							Authorization: `Bearer ${token}`,
+						}
+					})
+				} catch (error) {
+					console.log(error);
+					handleArray.push(MYdata)
+				}
+				if (i + 1 === offlineSend.length) {
+					setIsLoadingSync(false);
+					handleRefresh()
+					await AsyncStorage.setItem('@Database:offlineSend', JSON.stringify(handleArray))
+				}
+				setProgressSync(((i + 1) / offlineSend.length) * 100)
+
+			}, 4000 * i);
+		});
+
+	}
+
+	async function handleRefresh (showAlert = true) {
 		await isOnline()
 		const online = await AsyncStorage.getItem('@online');
 		if (online !== "true") {
 			const databaseData = await AsyncStorage.getItem('@DatabaseALL') as string
 			setFetchedData(Object.values(JSON.parse(databaseData).paraCatalogar));
 			setCataloged(Object.values(JSON.parse(databaseData).catalogados));
-			alert('Conecte a internet para atualizar os dados.\n\nSomente dados offline');
-		} else {
+			!showAlert || alert('Conecte a internet para atualizar os dados.\n\nSomente dados offline')
+		} else if (!isLoadingSync) {
 			setIsRefreshing(true)
 			await getAllData()
 			await fetchData()
 			await getCataloged()
 			setIsRefreshing(false)
+		} else {
+			await getAllData()
 		}
 	}
 
 	useEffect(() => {
 		isOnline();
-	}, [])
+		handleRefresh(false);
+	}, [isFocused])
 
 	return (
 		<>
+			{isLoadingSync ? <Loading text="Sincronizando pesquisas offline" isFull progress={progressSync} /> : <></>}
 			<StatusBar barStyle='light-content' backgroundColor='#DE5F5F' />
 			<Container
 				refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />}
 			>
+
 				<Header>
 					<MaterialCommunityIcons
 						name="logout"
@@ -225,7 +302,15 @@ const EstablishmentSelect: React.FC = ({ navigation }) => {
 						color='#FFFFFF'
 						onPress={signOut}
 					/>
-					<HeaderText>Olá, {user ? user.name : ''}!</HeaderText>
+
+					{syncIsavailable ? <MaterialCommunityIcons
+						name="autorenew"
+						size={31}
+						color='#FFFFFF'
+						onPress={AlertSync}
+					/> : <></>}
+
+					<HeaderText>Olá, {user ? user.name : ''} {syncIsavailable.toString()}!</HeaderText>
 				</Header>
 				{
 					isLoading === true && !isRefreshing ?

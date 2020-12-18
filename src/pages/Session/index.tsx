@@ -31,7 +31,7 @@ const Session: React.FC = ({ navigation, route }) => {
     });
   }
 
-  const getSession = useCallback(async () => {
+  async function getSession () {
     const online = await AsyncStorage.getItem('@online');
     if (online !== "true") {
       const databaseData = await AsyncStorage.getItem('@DatabaseALL') as string
@@ -53,7 +53,7 @@ const Session: React.FC = ({ navigation, route }) => {
     } catch (error) {
       console.log(error)
     }
-  }, [])
+  }
 
   // async function getSession () {
 

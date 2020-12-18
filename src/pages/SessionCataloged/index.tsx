@@ -8,23 +8,24 @@ import api from '../../services/api';
 import Loading from '../../components/Loading';
 
 
-import { Container,
-   Header,
-   Thumbnail,
-   HeaderTitleContainer,
-   SupermarketName,
-   Title,
-   SessionCard,
-   SessionName,
-  } from './styles';
+import {
+  Container,
+  Header,
+  Thumbnail,
+  HeaderTitleContainer,
+  SupermarketName,
+  Title,
+  SessionCard,
+  SessionName,
+} from './styles';
 
 
 const Session: React.FC = ({ navigation, route }) => {
-  const [isLoading, setIsLoading] = useState(false) 
+  const [isLoading, setIsLoading] = useState(false)
 
   const [sessions, setSessions] = useState([])
 
-  const getSession = useCallback(async() => {
+  async function getSession () {
     setIsLoading(true)
 
     try {
@@ -43,7 +44,7 @@ const Session: React.FC = ({ navigation, route }) => {
     } catch (error) {
       console.log(error)
     }
-  }, [])
+  }
 
   useEffect(() => {
     getSession()
@@ -68,24 +69,24 @@ const Session: React.FC = ({ navigation, route }) => {
       </Header>
       <Title>Sessão</Title>
 
-    {isLoading === true ? <Loading /> : (
+      {isLoading === true ? <Loading /> : (
 
-      <ScrollView contentContainerStyle={{ alignItems: 'center', width: "100%" }}>
+        <ScrollView contentContainerStyle={{ alignItems: 'center', width: "100%" }}>
 
-        {sessions.map(session => (
-          <View key={session} style={{ width: "100%", alignItems: "center" }}>
-            <SessionCard onPress={() => navigation.navigate('ProductsCataloged', {
-              EMP_ID: route.params.EMP_ID,
-              SESSION: session,
-              EMP_NAME: route.params.EMP_NAME.trim(),
-            })}>
-              <SessionName>{session}</SessionName>
-            </SessionCard>
-          </View>
+          {sessions.map(session => (
+            <View key={session} style={{ width: "100%", alignItems: "center" }}>
+              <SessionCard onPress={() => navigation.navigate('ProductsCataloged', {
+                EMP_ID: route.params.EMP_ID,
+                SESSION: session,
+                EMP_NAME: route.params.EMP_NAME.trim(),
+              })}>
+                <SessionName>{session}</SessionName>
+              </SessionCard>
+            </View>
           )
-        )}
-      </ScrollView>
-    )}
+          )}
+        </ScrollView>
+      )}
 
     </Container>
   )
