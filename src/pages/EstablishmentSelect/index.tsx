@@ -218,55 +218,70 @@ const EstablishmentSelect: React.FC = ({ navigation }) => {
 	}
 
 	async function sendOffline () {
-		const offlineSend = JSON.parse(await AsyncStorage.getItem('@Database:offlineSend') as string)
+		await isOnline()
+		const online = await AsyncStorage.getItem('@online');
+		if (online !== "true") {
+			Alert.alert(
+				'Você Está Offline!',
+				'Conecte-se a internet para sincronizar os dados.',
+				[
+					{
+						text: 'OK',
+						style: 'cancel'
+					}
+				]
+			);
+			setSyncIsavailable(false);
+		} else {
+			const offlineSend = JSON.parse(await AsyncStorage.getItem('@Database:offlineSend') as string)
+			setIsLoadingSync(true);
+			setProgressSync(0);
+			const handleArray = []
+			offlineSend.map((MYdata, i) => {
+				setTimeout(async () => {
 
-		setIsLoadingSync(true);
-		setProgressSync(0);
-		const handleArray = []
-		offlineSend.map((MYdata, i) => {
-			setTimeout(async () => {
+					try {
+						const data = new FormData()
+						data.append('EMP_ID', MYdata.EMP_ID)
+						data.append('EAN', MYdata.EAN)
+						data.append('CAT_PRECO', MYdata.CAT_PRECO)
+						data.append('CAT_SITUACAO', MYdata.CAT_SITUACAO)
 
-				try {
-					const data = new FormData()
-					data.append('EMP_ID', MYdata.EMP_ID)
-					data.append('EAN', MYdata.EAN)
-					data.append('CAT_PRECO', MYdata.CAT_PRECO)
-					data.append('CAT_SITUACAO', MYdata.CAT_SITUACAO)
+						MYdata.IMG ?
+							data.append('CAT_IMG', {
+								name: `image_${MYdata.EAN}.jpg`,
+								type: 'image/jpg',
+								uri: MYdata.IMG
+							} as any) : null
 
-					MYdata.IMG ?
-						data.append('CAT_IMG', {
-							name: `image_${MYdata.EAN}.jpg`,
-							type: 'image/jpg',
-							uri: MYdata.IMG
-						} as any) : null
+						const token = await AsyncStorage.getItem('@Formosa:token');
+						const response = await api.post(`/captura/registrar`, data, {
+							headers: {
+								'Content-Type': 'multipart/form-data',
+								Authorization: `Bearer ${token}`,
+							}
+						})
+					} catch (error) {
+						console.log(error);
+						handleArray.push(MYdata)
+					}
+					if (i + 1 === offlineSend.length) {
+						setIsLoadingSync(false);
+						handleRefresh()
+						await AsyncStorage.setItem('@Database:offlineSend', JSON.stringify(handleArray))
+					}
+					setProgressSync(((i + 1) / offlineSend.length) * 100)
 
-					const token = await AsyncStorage.getItem('@Formosa:token');
-					const response = await api.post(`/captura/registrar`, data, {
-						headers: {
-							'Content-Type': 'multipart/form-data',
-							Authorization: `Bearer ${token}`,
-						}
-					})
-				} catch (error) {
-					console.log(error);
-					handleArray.push(MYdata)
-				}
-				if (i + 1 === offlineSend.length) {
-					setIsLoadingSync(false);
-					handleRefresh()
-					await AsyncStorage.setItem('@Database:offlineSend', JSON.stringify(handleArray))
-				}
-				setProgressSync(((i + 1) / offlineSend.length) * 100)
-
-			}, 4000 * i);
-		});
-
+				}, 4000 * i);
+			});
+		}
 	}
 
 	async function handleRefresh (showAlert = true) {
 		await isOnline()
 		const online = await AsyncStorage.getItem('@online');
 		if (online !== "true") {
+			setSyncIsavailable(false)
 			const databaseData = await AsyncStorage.getItem('@DatabaseALL') as string
 			setFetchedData(Object.values(JSON.parse(databaseData).paraCatalogar));
 			setCataloged(Object.values(JSON.parse(databaseData).catalogados));
@@ -289,12 +304,11 @@ const EstablishmentSelect: React.FC = ({ navigation }) => {
 
 	return (
 		<>
-			{isLoadingSync ? <Loading text="Sincronizando pesquisas offline" isFull progress={progressSync} /> : <></>}
+			{isLoadingSync ? <Loading text="Sincronizando pesquisas offline." isFull progress={progressSync} /> : <></>}
 			<StatusBar barStyle='light-content' backgroundColor='#DE5F5F' />
 			<Container
 				refreshControl={<RefreshControl refreshing={isRefreshing} onRefresh={handleRefresh} />}
 			>
-
 				<Header>
 					<MaterialCommunityIcons
 						name="logout"
@@ -313,7 +327,6 @@ const EstablishmentSelect: React.FC = ({ navigation }) => {
 					<HeaderText>Olá, {user ? user.name : ''}!</HeaderText>
 				</Header>
 				{
-					
 					isLoading === true && !isRefreshing ?
 						<Loading />
 						:
@@ -381,13 +394,31 @@ const EstablishmentSelect: React.FC = ({ navigation }) => {
 							renderItem={({ item, index }) => {
 								return (
 									<Card
-										onPress={() => {
-											navigation.navigate('SessionCataloged', {
-												EMP_ID: item.id,
-												EMP_THUMB: item.EMP_LOGO,
-												EMP_NAME: item.EMP_NOME.trim()
-											})
-										}}
+										onPress={async () => {
+											await isOnline()
+											const online = await AsyncStorage.getItem('@online');
+											console.log(online);
+
+											if (online == 'true') {
+												navigation.navigate('SessionCataloged', {
+													EMP_ID: item.id,
+													EMP_THUMB: item.EMP_LOGO,
+													EMP_NAME: item.EMP_NOME.trim()
+												})
+											} else {
+												Alert.alert(
+													'Você Está Offline!',
+													'Conecte-se a internet para modificar os pesquisados.',
+													[
+														{
+															text: 'OK',
+															style: 'cancel'
+														}
+													]
+												);
+											}
+										}
+										}
 										style={index % 2 === 0 ? { marginRight: 2.5 } : { marginLeft: 2.5 }}
 									>
 										<Thumbnail source={marketThumb} style={{ resizeMode: 'cover' }} />

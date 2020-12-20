@@ -125,10 +125,8 @@ const Products: React.FC = ({ route, navigation }) => {
 		]
 	}
 
-
 	// Estados de atividade
 	const [isLoading, setIsLoading] = useState(false);
-
 
 	// Array de Produtos Catalogados
 	const [products, setProducts] = useState([]);
@@ -156,24 +154,41 @@ const Products: React.FC = ({ route, navigation }) => {
 
 	const onCodeText = useCallback(async () => {
 		setIsLoading(true)
-		const token = await AsyncStorage.getItem('@Formosa:token')
-
 		try {
-			const response = await api.get(`/captura/barcode/${route.params.EMP_ID}/${barcodeText}`, {
-				headers: {
-					Authorization: `Bearer ${token}`
-				}
-			})
+			setType(type);
+			setData(data);
+			await isOnline()
+			const online = await AsyncStorage.getItem('@online');
+			let filterProductName = ''
+			let id = '';
 
-			const filterProductName = response.data.PROD_NOME
+			if (online !== "true") {
+				const response = Object.values(products).find(x => (x.produto.PROD_EAN == data));
+				id = response.produto.id;
+				filterProductName = response.produto.PROD_NOME
+			} else {
+				const token = await AsyncStorage.getItem('@Formosa:token');
+				const response = await api.get(`/captura/barcode/${route.params.EMP_ID}/${data}`, {
+					headers: {
+						Authorization: `Bearer ${token}`
+					}
+				})
+				id = response.data.id;
+				filterProductName = response.data.PROD_NOME
+			}
 
-			onOpen()
-			setBarcode(barcodeText)
+			Alert.alert(`Código de barras escaneado com sucesso!${"\n"}${data}`)
+			if (productPrice === "0.00" || productPrice === "R$0,00") {
+				Alert.alert('Error', 'preço não pode ser 0,00')
+			}
+			onOpen();
+			setBarcode(data)
 			setProductName(filterProductName)
+			setProductID(id)
 			setProductPrice('R$0,00')
 			setIsLoading(false)
-
-		} catch (error) {
+		}
+		catch (error) {
 			console.log(error)
 
 			Alert.alert('Error', 'Produto não encontrado', [
@@ -190,26 +205,36 @@ const Products: React.FC = ({ route, navigation }) => {
 	// Pesquisar do produto por código de barras (camera)
 	const onCodeScanned = useCallback(async (type, data) => {
 		setIsLoading(true)
-		const token = await AsyncStorage.getItem('@Formosa:token')
-
 		try {
-			setType(type)
+			setType(type);
 			setData(data);
+			await isOnline()
+			const online = await AsyncStorage.getItem('@online');
+			let filterProductName = ''
+			let id = '';
 
-			const response = await api.get(`/captura/barcode/${route.params.EMP_ID}/${data}`, {
-				headers: {
-					Authorization: `Bearer ${token}`
-				}
-			})
+			if (online !== "true") {
+				const response = Object.values(products).find(x => (x.produto.PROD_EAN == data));
+				id = response.produto.id;
+				filterProductName = response.produto.PROD_NOME
+			} else {
+				const token = await AsyncStorage.getItem('@Formosa:token');
+				const response = await api.get(`/captura/barcode/${route.params.EMP_ID}/${data}`, {
+					headers: {
+						Authorization: `Bearer ${token}`
+					}
+				})
+				id = response.data.id;
+				filterProductName = response.data.PROD_NOME
+			}
 
-			const filterProductName = response.data.PROD_NOME
 			Alert.alert(`Código de barras escaneado com sucesso!${"\n"}${data}`)
 			if (productPrice === "0.00" || productPrice === "R$0,00") {
 				Alert.alert('Error', 'preço não pode ser 0,00')
 			}
-
-			onOpen()
-			setBarcode(data)
+			onOpen();
+			setBarcode(data);
+			setProductID(id);
 			setProductName(filterProductName)
 			setProductPrice('R$0,00')
 
@@ -313,10 +338,6 @@ const Products: React.FC = ({ route, navigation }) => {
 				getData();
 			} catch (err) {
 				console.error(err)
-			} finally {
-				setIsLoading(false);
-				onClose();
-				setChecked('0')
 			}
 
 		} else {
@@ -330,7 +351,6 @@ const Products: React.FC = ({ route, navigation }) => {
 				data.append('EAN', barcode)
 				data.append('CAT_PRECO', productPrice)
 				data.append('CAT_SITUACAO', checked)
-
 				image ?
 					data.append('CAT_IMG', {
 						name: `image_${barcode}.jpg`,
@@ -345,13 +365,14 @@ const Products: React.FC = ({ route, navigation }) => {
 					}
 				})
 
-				getData();
 			} catch (err) {
 				console.log(err)
 			}
-			onClose();
-			setChecked('0')
 		}
+		getData();
+		onClose();
+		setChecked('0');
+		setIsLoading(false);
 	}
 
 	const handleEndSearch = useCallback(async () => {
@@ -369,31 +390,7 @@ const Products: React.FC = ({ route, navigation }) => {
 		isOnline();
 		getData();
 	}, [])
-	async function testeTiago () {
-		const MYdata = JSON.parse(await AsyncStorage.getItem('@Database:testeTIago') as string);
 
-		const data = new FormData()
-		data.append('EMP_ID', MYdata.EMP_ID)
-		data.append('EAN', MYdata.EAN)
-		data.append('CAT_PRECO', MYdata.CAT_PRECO)
-		data.append('CAT_SITUACAO', MYdata.CAT_SITUACAO)
-
-		image ?
-			data.append('CAT_IMG', {
-				name: `image_${MYdata.EAN}.jpg`,
-				type: 'image/jpg',
-				uri: MYdata.IMG
-			} as any) : null
-
-		const token = await AsyncStorage.getItem('@Formosa:token');
-		const response = await api.post(`/captura/registrar`, data, {
-			headers: {
-				'Content-Type': 'multipart/form-data',
-				Authorization: `Bearer ${token}`,
-			}
-		})
-		console.log(response);
-	}
 	const pickImage = useCallback(async () => {
 		if (Platform.OS !== 'web') {
 			const { status } = await ImagePicker.requestCameraRollPermissionsAsync();
@@ -738,11 +735,6 @@ const Products: React.FC = ({ route, navigation }) => {
 								<ModalButtonText>Adicionar</ModalButtonText>
 							</ModalButton>
 						</ModalGroup>
-						<ModalButton
-							onPress={testeTiago}
-						>
-							<ModalButtonText>Teste tiago</ModalButtonText>
-						</ModalButton>
 					</ModalContainer>
 				)}
 
