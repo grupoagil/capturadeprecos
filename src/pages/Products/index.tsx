@@ -154,9 +154,11 @@ const Products: React.FC = ({ route, navigation }) => {
 
 	const onCodeText = useCallback(async () => {
 		setIsLoading(true)
+		console.log(barcodeText);
+
 		try {
 			setType(type);
-			setData(data);
+			setData(barcodeText);
 			await isOnline()
 			const online = await AsyncStorage.getItem('@online');
 			let filterProductName = ''
