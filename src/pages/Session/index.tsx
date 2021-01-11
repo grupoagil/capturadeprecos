@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
+import { Alert } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import marketThumb from '../../assets/images/marketThumb.png';
 import AsyncStorage from '@react-native-community/async-storage';
@@ -32,14 +33,14 @@ const Session: React.FC = ({ navigation, route }) => {
   }
 
   async function getSession () {
-    const online = await AsyncStorage.getItem('@online');
-    if (online !== "true") {
-      const databaseData = await AsyncStorage.getItem('@DatabaseALL') as string
-      setSessions(Object.keys(JSON.parse(databaseData).paraCatalogar[route.params.EMP_ID].secao) as any)
-      return
-    }
-    setIsLoading(true)
     try {
+      const online = await AsyncStorage.getItem('@online');
+      if (online !== "true") {
+        const databaseData = await AsyncStorage.getItem('@DatabaseALL') as string
+        setSessions(Object.keys(JSON.parse(databaseData).paraCatalogar[route.params.EMP_ID].secao) as any)
+        return
+      }
+      setIsLoading(true)
       const token = await AsyncStorage.getItem('@Formosa:token')
       const response = await api.get(`/captura/empresas/${route.params.EMP_ID}/secoes`, {
         headers: {
@@ -50,8 +51,21 @@ const Session: React.FC = ({ navigation, route }) => {
       const getSaveSession = await AsyncStorage.getItem('@Session:capturar') as string
       setSessions(JSON.parse(getSaveSession));
       setIsLoading(false)
-    } catch (error) {
-      console.log(error)
+    } catch (err) {
+      Alert.alert(
+        'Você Está Offline!',
+        err,
+        [
+          {
+            text: 'OK',
+            style: 'cancel'
+          }
+        ]
+      );
+      navigation.reset({
+        index: 0,
+        routes: [{ name: 'EstablishmentSelect' }],
+      });
     }
   }
 

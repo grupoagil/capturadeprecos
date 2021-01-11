@@ -130,6 +130,7 @@ const Products: React.FC = ({ route, navigation }) => {
 
 	// Array de Produtos Catalogados
 	const [products, setProducts] = useState([]);
+	const [productsFilter, setProductsFilter] = useState([]);
 
 	// image
 	const [image, setImage] = useState('')
@@ -140,6 +141,7 @@ const Products: React.FC = ({ route, navigation }) => {
 	const [modalCodeWrite, setModalCodeWrite] = useState(false)
 	const [data, setData] = React.useState("")
 	const [type, setType] = React.useState("")
+	const [searchName, setSearchName] = useState("")
 
 	// pesquisar produto Pesquisar do produto por código de barras (digitado)
 	const [barcodeText, setBarcodeText] = useState('')
@@ -154,8 +156,6 @@ const Products: React.FC = ({ route, navigation }) => {
 
 	const onCodeText = useCallback(async () => {
 		setIsLoading(true)
-		console.log(barcodeText);
-
 		try {
 			setType(type);
 			setData(barcodeText);
@@ -202,7 +202,6 @@ const Products: React.FC = ({ route, navigation }) => {
 		setBarcodeText('')
 		setIsLoading(false)
 	}, [barcodeText])
-
 
 	// Pesquisar do produto por código de barras (camera)
 	const onCodeScanned = useCallback(async (type, data) => {
@@ -306,9 +305,8 @@ const Products: React.FC = ({ route, navigation }) => {
 
 		delete databaseData.paraCatalogar[route.params.EMP_ID].secao[route.params.SESSION].produtos[productID]
 
-		console.log(databaseData);
-
 		await AsyncStorage.setItem("@DatabaseALL", JSON.stringify(databaseData))
+
 	}
 
 	async function handleSubmit () {
@@ -317,8 +315,10 @@ const Products: React.FC = ({ route, navigation }) => {
 
 		if (!productPrice || !barcode || !productName) {
 			Alert.alert('Todos os campos devem ser preenchidos.')
+			return
 		} else if (productPrice === "0.00" || productPrice === "R$0,00" || productPrice === "0,00") {
 			Alert.alert('Error', 'O preço não pode ser R$0,00')
+			return
 		} else if (online !== "true") {
 			try {
 				setIsLoading(true)
@@ -378,18 +378,39 @@ const Products: React.FC = ({ route, navigation }) => {
 	}
 
 	const handleEndSearch = useCallback(async () => {
-		const token = await AsyncStorage.getItem('@Formosa:token');
-		await api.post('/captura/concluir', {
-			EMP_ID: route.params.EMP_ID
-		}, {
-			headers: {
-				Authorization: `Bearer ${token}`
-			}
-		}
-		)
 
+		await isOnline()
+		const online = await AsyncStorage.getItem('@online');
+		if (online !== "true") {
+			const databaseData = JSON.parse(await AsyncStorage.getItem('@DatabaseALL') as string)
+			if (Array.isArray(databaseData.catalogados)) {
+				databaseData.catalogados = {}
+			}
+			databaseData.catalogados[route.params.EMP_ID] = databaseData.paraCatalogar[route.params.EMP_ID]
+			delete databaseData.paraCatalogar[route.params.EMP_ID]
+			await AsyncStorage.setItem("@DatabaseALL", JSON.stringify(databaseData))
+			const MyofflineData = {
+				EMP_ID: String(route.params.EMP_ID),
+			}
+			let offlineSend = await AsyncStorage.getItem('@Database:offlineSend') as string
+			offlineSend = JSON.parse(offlineSend)
+			const offlineSendArray = Array.isArray(offlineSend) ? [...offlineSend, MyofflineData] : [MyofflineData]
+			await AsyncStorage.setItem("@Database:offlineSend", JSON.stringify(offlineSendArray))
+			navigation.navigate('EstablishmentSelect')
+			return
+
+		} else {
+			const token = await AsyncStorage.getItem('@Formosa:token');
+			await api.post('/captura/concluir', {
+				EMP_ID: route.params.EMP_ID
+			}, {
+				headers: {
+					Authorization: `Bearer ${token}`
+				}
+			}
+			)
+		}
 		setModalDoneVisible(false)
-		isOnline();
 		getData();
 	}, [])
 
@@ -420,6 +441,20 @@ const Products: React.FC = ({ route, navigation }) => {
 		getData();
 	}, [])
 
+	useEffect(() => {
+
+		setProductsFilter(
+			products.filter(
+				product =>
+					product.produto.PROD_NOME
+						.toLowerCase()
+						.includes(searchName.toLowerCase())
+			)
+		)
+
+
+	}, [searchName])
+
 	return (
 		<>
 			<StatusBar barStyle='dark-content' backgroundColor='#F5F4F4' />
@@ -442,6 +477,15 @@ const Products: React.FC = ({ route, navigation }) => {
 					</HeaderTitleContainer>
 				</Header>
 				<Title>Produtos para pesquisar hoje</Title>
+				<TextInput
+					returnKeyType="done"
+					keyboardType="default"
+					theme={theme}
+					label="Pesquisar por nome"
+					value={searchName}
+					onChangeText={name => setSearchName(name)}
+				/>
+
 				{
 					isLoading === true ? <Loading /> :
 						<Content
@@ -451,7 +495,7 @@ const Products: React.FC = ({ route, navigation }) => {
 									<BoxEmpty />
 								);
 							}}
-							data={products}
+							data={productsFilter.length === 0 ? products : productsFilter}
 							keyExtractor={(item) => String(item.produto.id)}
 							renderItem={({ item }) => {
 								return (
@@ -487,7 +531,8 @@ const Products: React.FC = ({ route, navigation }) => {
 
 			<View style={styles.container}>
 
-				<RectButton style={styles.buttonDoneContainer} onPress={() => setModalDoneVisible(true)}>
+				<RectButton style={styles.buttonDoneContainer}
+					onPress={async () => { setModalDoneVisible(true) }}>
 					<Ionicons name="md-done-all" size={24} color="#fff" />
 				</RectButton>
 
