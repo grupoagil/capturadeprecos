@@ -87,7 +87,6 @@ const EstablishmentSelect: React.FC = ({ navigation }) => {
 				return;
 			}
 			token = (await Notifications.getExpoPushTokenAsync()).data;
-			console.log(token);
 		} else {
 			alert('Must use physical device for Push Notifications');
 		}
@@ -137,15 +136,11 @@ const EstablishmentSelect: React.FC = ({ navigation }) => {
 	)
 
 	async function getAllData () {
-		const token = await AsyncStorage.getItem('@Formosa:token');
+		setIsLoading(true);
 		try {
+			const token = await AsyncStorage.getItem('@Formosa:token');
 			const offlineSend = await AsyncStorage.getItem('@Database:offlineSend') as string
 			setSyncIsavailable(JSON.parse(offlineSend).length > 0)
-		} catch {
-			setSyncIsavailable(false)
-		}
-
-		try {
 			const response = await api.get(
 				`captura/all`, {
 				headers: {
@@ -153,8 +148,9 @@ const EstablishmentSelect: React.FC = ({ navigation }) => {
 				}
 			});
 			await AsyncStorage.setItem("@DatabaseALL", JSON.stringify(response.data))
-			setIsLoading(false);
+
 		} catch (err) {
+			setSyncIsavailable(false)
 			console.log(err)
 		} finally {
 			setIsLoading(false);
@@ -241,26 +237,39 @@ const EstablishmentSelect: React.FC = ({ navigation }) => {
 				setTimeout(async () => {
 
 					try {
-						const data = new FormData()
-						data.append('EMP_ID', MYdata.EMP_ID)
-						data.append('EAN', MYdata.EAN)
-						data.append('CAT_PRECO', MYdata.CAT_PRECO)
-						data.append('CAT_SITUACAO', MYdata.CAT_SITUACAO)
-
-						MYdata.IMG ?
-							data.append('CAT_IMG', {
-								name: `image_${MYdata.EAN}.jpg`,
-								type: 'image/jpg',
-								uri: MYdata.IMG
-							} as any) : null
 
 						const token = await AsyncStorage.getItem('@Formosa:token');
-						const response = await api.post(`/captura/registrar`, data, {
-							headers: {
-								'Content-Type': 'multipart/form-data',
-								Authorization: `Bearer ${token}`,
+
+						if (MYdata.EAN !== undefined) {
+							const data = new FormData()
+							data.append('EMP_ID', MYdata.EMP_ID)
+							data.append('EAN', MYdata.EAN)
+							data.append('CAT_PRECO', MYdata.CAT_PRECO)
+							data.append('CAT_SITUACAO', MYdata.CAT_SITUACAO)
+
+							MYdata.IMG ?
+								data.append('CAT_IMG', {
+									name: `image_${MYdata.EAN}.jpg`,
+									type: 'image/jpg',
+									uri: MYdata.IMG
+								} as any) : null
+
+							const response = await api.post(`/captura/registrar`, data, {
+								headers: {
+									'Content-Type': 'multipart/form-data',
+									Authorization: `Bearer ${token}`,
+								}
+							})
+						} else {
+							await api.post('/captura/concluir', {
+								EMP_ID: MYdata.EMP_ID
+							}, {
+								headers: {
+									Authorization: `Bearer ${token}`
+								}
 							}
-						})
+							)
+						}
 					} catch (error) {
 						console.log(error);
 						handleArray.push(MYdata)
@@ -397,8 +406,6 @@ const EstablishmentSelect: React.FC = ({ navigation }) => {
 										onPress={async () => {
 											await isOnline()
 											const online = await AsyncStorage.getItem('@online');
-											console.log(online);
-
 											if (online == 'true') {
 												navigation.navigate('SessionCataloged', {
 													EMP_ID: item.id,

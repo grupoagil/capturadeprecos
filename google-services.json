@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "983495107117",
+    "firebase_url": "https://formosa-fac87.firebaseio.com",
+    "project_id": "formosa-fac87",
+    "storage_bucket": "formosa-fac87.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:983495107117:android:e3ebd7ab9964df5d050ea4",
+        "android_client_info": {
+          "package_name": "com.luccaroli.capturadeprecos"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "983495107117-7e18fjp00avemrqo47kmjd2i81pp2vkv.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDfh2NuEoTmAgJ2tfmwLIs3NR0CQDK7vec"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "983495107117-7e18fjp00avemrqo47kmjd2i81pp2vkv.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
