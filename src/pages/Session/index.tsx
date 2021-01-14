@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
+// import { Alert } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import marketThumb from '../../assets/images/marketThumb.png';
 import AsyncStorage from '@react-native-community/async-storage';
@@ -23,7 +24,6 @@ const Session: React.FC = ({ navigation, route }) => {
   const [isLoading, setIsLoading] = useState(false)
   const [sessions, setSessions] = useState([]);
 
-  // const [online, setOnline] = useState(false)
   function isOnline () {
     NetInfo.fetch().then(async (state) => {
       await AsyncStorage.setItem('@online', state.isConnected.toString())
@@ -32,37 +32,34 @@ const Session: React.FC = ({ navigation, route }) => {
   }
 
   async function getSession () {
-    const online = await AsyncStorage.getItem('@online');
-    if (online !== "true") {
-      const databaseData = await AsyncStorage.getItem('@DatabaseALL') as string
-      setSessions(Object.keys(JSON.parse(databaseData).paraCatalogar[route.params.EMP_ID].secao) as any)
-      return
-    }
-    setIsLoading(true)
     try {
-      const token = await AsyncStorage.getItem('@Formosa:token')
-      const response = await api.get(`/captura/empresas/${route.params.EMP_ID}/secoes`, {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      })
-      await AsyncStorage.setItem('@Session:capturar', JSON.stringify(response.data))
-      const getSaveSession = await AsyncStorage.getItem('@Session:capturar') as string
-      setSessions(JSON.parse(getSaveSession));
-      setIsLoading(false)
-    } catch (error) {
-      console.log(error)
+      const online = await AsyncStorage.getItem('@online');
+      if (online !== "true") {
+        const databaseData = await AsyncStorage.getItem('@DatabaseALL') as string
+        setSessions(
+          JSON.parse(databaseData).paraCatalogar[route.params.EMP_ID].secao !== undefined ?
+            Object.keys(JSON.parse(databaseData).paraCatalogar[route.params.EMP_ID].secao) as any
+            : [])
+      } else {
+        setIsLoading(true)
+        const token = await AsyncStorage.getItem('@Formosa:token')
+        const response = await api.get(`/captura/empresas/${route.params.EMP_ID}/secoes`, {
+          headers: {
+            Authorization: `Bearer ${token}`
+          }
+        })
+        await AsyncStorage.setItem('@Session:capturar', JSON.stringify(response.data))
+        const getSaveSession = await AsyncStorage.getItem('@Session:capturar') as string
+        setSessions(JSON.parse(getSaveSession));
+        setIsLoading(false)
+      }
+    } catch (err) {
+      console.log(err);
     }
   }
 
-  // async function getSession () {
-
-  // }
-
-
   useEffect(() => {
     isOnline();
-    getSession();
   }, [])
 
   return (

@@ -128,7 +128,7 @@ const EstablishmentSelect: React.FC = ({ navigation }) => {
 			return response
 		},
 		error => {
-			if (error.response.status === 401) {
+			if (error.response && error.response.status === 401) {
 				signOut()
 			}
 			return Promise.reject(error)
@@ -232,7 +232,7 @@ const EstablishmentSelect: React.FC = ({ navigation }) => {
 			const offlineSend = JSON.parse(await AsyncStorage.getItem('@Database:offlineSend') as string)
 			setIsLoadingSync(true);
 			setProgressSync(0);
-			const handleArray = []
+			const handleArray = [] as any
 			offlineSend.map((MYdata, i) => {
 				setTimeout(async () => {
 
@@ -292,8 +292,8 @@ const EstablishmentSelect: React.FC = ({ navigation }) => {
 		if (online !== "true") {
 			setSyncIsavailable(false)
 			const databaseData = await AsyncStorage.getItem('@DatabaseALL') as string
-			setFetchedData(Object.values(JSON.parse(databaseData).paraCatalogar));
-			setCataloged(Object.values(JSON.parse(databaseData).catalogados));
+			setFetchedData(typeof JSON.parse(databaseData).paraCatalogar === 'object' ? Object.values(JSON.parse(databaseData).paraCatalogar) : []);
+			setCataloged(typeof JSON.parse(databaseData).catalogados === 'object' ? Object.values(JSON.parse(databaseData).catalogados) : []);
 			!showAlert || alert('Conecte a internet para atualizar os dados.\n\nSomente dados offline')
 		} else if (!isLoadingSync) {
 			setIsRefreshing(true)
