@@ -81,6 +81,7 @@ const Session: React.FC = ({ navigation, route }) => {
       </Header>
       <Title>Sessão</Title>
 
+
       {isLoading === true ? <Loading /> : (
 
         <ScrollView contentContainerStyle={{ alignItems: 'center', width: "100%" }}>
