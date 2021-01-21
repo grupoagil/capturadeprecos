@@ -371,6 +371,7 @@ const Products: React.FC = ({ route, navigation }) => {
 			}
 		}
 		getData();
+		setSearchName('');
 		setProductsFilter([]);
 		onClose();
 		setChecked('0');
