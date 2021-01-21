@@ -333,7 +333,6 @@ const Products: React.FC = ({ route, navigation }) => {
 				let offlineSend = await AsyncStorage.getItem('@Database:offlineSend') as string
 				offlineSend = JSON.parse(offlineSend)
 				const offlineSendArray = Array.isArray(offlineSend) ? [...offlineSend, MyofflineData] : [MyofflineData]
-
 				await AsyncStorage.setItem("@Database:offlineSend", JSON.stringify(offlineSendArray))
 
 				databaseHandle();
@@ -372,6 +371,7 @@ const Products: React.FC = ({ route, navigation }) => {
 			}
 		}
 		getData();
+		setProductsFilter([]);
 		onClose();
 		setChecked('0');
 		setIsLoading(false);

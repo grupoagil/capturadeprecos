@@ -40,6 +40,7 @@ Notifications.setNotificationHandler({
 const EstablishmentSelect: React.FC = ({ navigation }) => {
 
 	const [expoPushToken, setExpoPushToken] = useState('');
+
 	const [notification, setNotification] = useState(true);
 	const notificationListener = useRef();
 	const responseListener = useRef();
@@ -136,24 +137,24 @@ const EstablishmentSelect: React.FC = ({ navigation }) => {
 	)
 
 	async function getAllData () {
-		setIsLoading(true);
 		try {
 			const token = await AsyncStorage.getItem('@Formosa:token');
 			const offlineSend = await AsyncStorage.getItem('@Database:offlineSend') as string
-			setSyncIsavailable(JSON.parse(offlineSend).length > 0)
+			//alert('Meu alerta:' + offlineSend)
+			if (offlineSend !== '' && offlineSend !== null) {
+				setSyncIsavailable(JSON.parse(offlineSend).length > 0)
+			}
 			const response = await api.get(
 				`captura/all`, {
 				headers: {
 					Authorization: `Bearer ${token}`
 				}
+
 			});
 			await AsyncStorage.setItem("@DatabaseALL", JSON.stringify(response.data))
-
-		} catch (err) {
+		} catch (error) {
 			setSyncIsavailable(false)
-			console.log(err)
-		} finally {
-			setIsLoading(false);
+			console.log(error)
 		}
 	}
 
@@ -287,22 +288,32 @@ const EstablishmentSelect: React.FC = ({ navigation }) => {
 	}
 
 	async function handleRefresh (showAlert = true) {
-		await isOnline()
-		const online = await AsyncStorage.getItem('@online');
-		if (online !== "true") {
-			setSyncIsavailable(false)
-			const databaseData = await AsyncStorage.getItem('@DatabaseALL') as string
-			setFetchedData(typeof JSON.parse(databaseData).paraCatalogar === 'object' ? Object.values(JSON.parse(databaseData).paraCatalogar) : []);
-			setCataloged(typeof JSON.parse(databaseData).catalogados === 'object' ? Object.values(JSON.parse(databaseData).catalogados) : []);
-			!showAlert || alert('Conecte a internet para atualizar os dados.\n\nSomente dados offline')
-		} else if (!isLoadingSync) {
-			setIsRefreshing(true)
-			await getAllData()
-			await fetchData()
-			await getCataloged()
-			setIsRefreshing(false)
-		} else {
-			await getAllData()
+		try {
+			await isOnline()
+			const online = await AsyncStorage.getItem('@online');
+			if (online !== "true") {
+				const databaseData = await AsyncStorage.getItem('@DatabaseALL') || ''
+				setSyncIsavailable(false)
+				if (databaseData.length > 0) {
+					if (typeof JSON.parse(databaseData).paraCatalogar === 'object') {
+						setFetchedData(Object.values(JSON.parse(databaseData).paraCatalogar));
+					}
+					if (typeof JSON.parse(databaseData).catalogados === 'object') {
+						setCataloged(Object.values(JSON.parse(databaseData).catalogados));
+					}
+				}
+				!showAlert || alert('Conecte a internet para atualizar os dados.\n\nSomente dados offline')
+			} else if (!isLoadingSync) {
+				setIsRefreshing(true)
+				await getAllData()
+				await fetchData()
+				await getCataloged()
+				setIsRefreshing(false)
+			} else {
+				await getAllData()
+			}
+		} catch (error) {
+			alert(error)
 		}
 	}
 
