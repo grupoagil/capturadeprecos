@@ -263,7 +263,8 @@ const EstablishmentSelect: React.FC = ({ navigation }) => {
 							})
 						} else {
 							await api.post('/captura/concluir', {
-								EMP_ID: MYdata.EMP_ID
+								EMP_ID: MYdata.EMP_ID,
+								SESSAO: MYdata.SESSAO
 							}, {
 								headers: {
 									Authorization: `Bearer ${token}`

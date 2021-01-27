@@ -30,7 +30,7 @@ const Session: React.FC = ({ navigation, route }) => {
 
     try {
       const token = await AsyncStorage.getItem('@Formosa:token')
-      const response = await api.get(`/captura/empresas/${route.params.EMP_ID}/secoes`, {
+      const response = await api.get(`/captura/catalogados/empresas/${route.params.EMP_ID}/secoes`, {
         headers: {
           Authorization: `Bearer ${token}`
         }

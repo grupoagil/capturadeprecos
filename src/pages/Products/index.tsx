@@ -324,6 +324,7 @@ const Products: React.FC = ({ route, navigation }) => {
 				setIsLoading(true)
 				const MyofflineData = {
 					EMP_ID: String(route.params.EMP_ID),
+					SESSAO: String(route.params.SESSION),
 					EAN: barcode,
 					CAT_PRECO: productPrice,
 					CAT_SITUACAO: checked,
@@ -392,6 +393,7 @@ const Products: React.FC = ({ route, navigation }) => {
 			await AsyncStorage.setItem("@DatabaseALL", JSON.stringify(databaseData))
 			const MyofflineData = {
 				EMP_ID: String(route.params.EMP_ID),
+				SESSAO: String(route.params.SESSION)
 			}
 			let offlineSend = await AsyncStorage.getItem('@Database:offlineSend') as string
 			offlineSend = JSON.parse(offlineSend)
@@ -403,7 +405,8 @@ const Products: React.FC = ({ route, navigation }) => {
 		} else {
 			const token = await AsyncStorage.getItem('@Formosa:token');
 			await api.post('/captura/concluir', {
-				EMP_ID: route.params.EMP_ID
+				EMP_ID: route.params.EMP_ID,
+				SESSAO: route.params.SESSION
 			}, {
 				headers: {
 					Authorization: `Bearer ${token}`
